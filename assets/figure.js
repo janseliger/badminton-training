@@ -160,6 +160,11 @@
   }
 
   const css = (n, el, d) => (getComputedStyle(el).getPropertyValue(n).trim() || d);
+  function mixHex(a, b, k) {
+    const h = c => { c = c.replace("#", ""); if (c.length === 3) c = c.split("").map(x => x + x).join(""); return /^[0-9a-f]{6}$/i.test(c) ? [0, 2, 4].map(i => parseInt(c.substr(i, 2), 16)) : null; };
+    const A = h(a), B = h(b); if (!A || !B) return k > .5 ? b : a;
+    return "rgb(" + A.map((x, i) => Math.round(x + (B[i] - x) * k)).join(",") + ")";
+  }
 
   /* Bewegungsbahn: das Gelenk, das sich am meisten bewegt (oder anim.trail) */
   const TRAIL_KEYS = ["hN", "hF", "fN", "fF", "kN", "kF", "head"];
@@ -241,7 +246,7 @@
     parts.push({ z: torsoZ, fn: () => {
       ctx.lineJoin = "round";
       path([J.shN, J.shF, J.hipF, J.hipN], true); ctx.strokeStyle = halo; ctx.lineWidth = 11 * s; ctx.stroke();
-      const quad = (pts, n) => { const col = facing(n) > -0.12 ? chest : ink; path(pts, true); ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 8 * s; ctx.fill(); ctx.stroke(); };
+      const quad = (pts, n) => { const col = mixHex(ink, chest, Math.max(0, Math.min(1, (facing(n) + .55) / .8))); path(pts, true); ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 8 * s; ctx.fill(); ctx.stroke(); };
       // die vom Betrachter abgewandte Hälfte zuerst
       const up = [[J.shN, J.shF, mF, mN], J.f], low = [[mN, mF, J.hipF, J.hipN], J.fLow];
       const zz = q => q[0].reduce((a, p) => a + X(p)[2], 0);
