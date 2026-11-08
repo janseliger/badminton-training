@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Gliederpuppe Probe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Probe: drei Übungen als 3D-Gliederpuppe, je eine Karte, mit Ziehen drehbar */
+:root{--bg:#f2f5f1;--surface:#fff;--ink:#16211b;--muted:#5a6a61;--line:#d3dcd5;--work:#1c6a49;--stage:#fbf8f2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1512;--surface:#17201b;--ink:#e7eee9;--muted:#93a39a;--line:#2b3831;--work:#43b483;--stage:#1d2621;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1512;--surface:#17201b;--ink:#e7eee9;--muted:#93a39a;--line:#2b3831;--work:#43b483;--stage:#1d2621;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:Barlow,system-ui,sans-serif;font-size:16px}
+.wrap{max-width:1180px;margin:0 auto;padding-block:24px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:34px;margin:0}
+.intro{margin:0;color:var(--muted);max-width:68ch}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;display:grid;gap:8px;min-width:0}
+.stage{position:relative;aspect-ratio:4/3;background:var(--stage);border-radius:4px;overflow:hidden}
+.cap{position:absolute;top:8px;left:8px;right:8px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;color:#16211b;pointer-events:none;z-index:2}
+.hint{position:absolute;bottom:6px;right:8px;font-size:12px;color:#5a6a61;pointer-events:none}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:22px;margin:0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+button{font:600 14px Barlow,sans-serif;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:5px;padding:6px 10px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--work);outline-offset:2px}
+.err{color:var(--muted)}
+</style>
+<div class="wrap">
+<h1>Gliederpuppe – Probe</h1>
+<p class="intro">Dieselben Bewegungen wie bisher, aber als 3D-Puppe mit Licht und Schatten. Zum Drehen der Ansicht mit Maus oder Finger ziehen. Grün ist die nahe Körperseite, die dunkle Kappe ist der Hinterkopf, der orange Ring die Stelle, auf die man achtet.</p>
+<div class="g" id="g"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="assets/figure.js?v=15"></script>
+<script src="assets/figures.js?v=15"></script>
+<script src="assets/mannequin.js?v=15"></script>
+<script>
+const ITEMS=[["open-book","Open Book"],["russian-twist","Russian Twist"],["9090-haende","90/90-Hüftwechsel"],["ausfall-rotation","Ausfallschritt mit Rotation"],["mountain-climber","Langsame Mountain Climbers"],["huefte-einbeinig","Einbeinige Hüftbrücke"],["situp-drehung","Sit-up mit Drehung"],["schulterklopfen","Stütz mit Schulterklopfen"],["bws","Brustwirbelsäulen-Rotation"]];
+const g=document.getElementById("g");
+ITEMS.forEach(([k,n])=>{
+  const c=document.createElement("div");c.className="card";
+  c.innerHTML=`<div class="row"><h2>${n}</h2><button type="button">Ansicht zurücksetzen</button></div><div class="stage"><div class="cap"></div><div class="hint">Ziehen zum Drehen</div></div>`;
+  g.appendChild(c);
+  const st=c.querySelector(".stage");
+  try{const p=MannequinPlayer(st);p.set(FIGS[k]);p.onCaption(t=>c.querySelector(".cap").textContent=t);c.querySelector("button").onclick=()=>p.resetView();}
+  catch(e){st.innerHTML='<p class="err">3D-Darstellung wird von diesem Gerät nicht unterstützt.</p>';}
+});
+</script>
+
+</html>
