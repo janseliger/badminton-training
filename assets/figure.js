@@ -92,6 +92,10 @@
     const lN = ik(J.hipN, fN, L.th, L.sh, pole(p.kN, defK));
     const lF = ik(J.hipF, fF, L.th, L.sh, pole(p.kF, p.kN ? pole(p.kN) : defK));
     Object.assign(J, { eN: aN.joint, hN: aN.end, eF: aF.joint, hF: aF.end, kN: lN.joint, fN: lN.end, kF: lF.joint, fF: lF.end });
+    ["eN", "hN", "eF", "hF", "kN", "fN", "kF", "fF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
+    // Blickrichtung (Brust) und Bauchrichtung für die Darstellung
+    let sl = v.sub(ax, v.mul(u, v.dot(ax, u))); sl = v.len(sl) < 1e-3 ? s : v.norm(sl);
+    J.f = f; J.fLow = v.norm(v.cross(u, sl)); J.u = u; J.hu = hu;
     return J;
   }
 
@@ -178,20 +182,29 @@
     const seg = (pts, col, wd) => parts.push({ z: pts.reduce((a, p) => a + X(p)[2], 0) / pts.length, fn: () => {
       ctx.strokeStyle = col; ctx.lineWidth = wd * s; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.beginPath();
       pts.forEach((p, i) => { const q = X(p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.stroke(); } });
+    const chest = css("--fig-chest", el, "#8eaabd");
     seg([J.hipF, J.kF, J.fF], far, 7.5);
     seg([J.shF, J.eF, J.hF], far, 6);
     seg([J.hipN, J.kN, J.fN], acc, 7.5);
-    seg([J.shN, J.eN, J.hN], ink, 6);
-    // Rumpf als Fläche zwischen Schultern und Hüften
-    parts.push({ z: (X(J.P)[2] + X(J.S)[2]) / 2, fn: () => {
-      const q = [J.shN, J.shF, J.hipF, J.hipN].map(X);
-      ctx.fillStyle = ink; ctx.strokeStyle = ink; ctx.lineWidth = 8 * s; ctx.lineJoin = "round";
+    seg([J.shN, J.eN, J.hN], acc, 6);
+    // Rumpf in zwei Teilen: Brust oben, Bauch unten. Zur Kamera zeigende Vorderseite hell, Rücken dunkel.
+    const facing = n => { const a = pr([0, 0, 0]), b = pr(n); return b[2] - a[2]; };
+    const mid = (a, b) => v.add(a, v.mul(v.sub(b, a), .5));
+    const mN = mid(J.shN, J.hipN), mF = mid(J.shF, J.hipF);
+    const quad = (pts, n) => parts.push({ z: pts.reduce((a, p) => a + X(p)[2], 0) / 4, fn: () => {
+      const q = pts.map(X), col = facing(n) > -0.12 ? chest : ink;
+      ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 8 * s; ctx.lineJoin = "round";
       ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill(); ctx.stroke();
     } });
+    quad([J.shN, J.shF, mF, mN], J.f);
+    quad([mN, mF, J.hipF, J.hipN], J.fLow);
+    // Kopf mit Nase in Blickrichtung
     parts.push({ z: X(J.head)[2], fn: () => {
       const q = X(J.head), n = X(J.S); ctx.strokeStyle = ink; ctx.lineWidth = 6 * s; ctx.lineCap = "round";
       ctx.beginPath(); ctx.moveTo(n[0], n[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
       ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(q[0], q[1], L.head * s, 0, Math.PI * 2); ctx.fill();
+      const nz = X(v.add(J.head, v.mul(v.norm(v.cross(J.hu, v.cross(J.f, J.hu))), L.head + 2)));
+      ctx.fillStyle = chest; ctx.beginPath(); ctx.arc(nz[0], nz[1], 3.6 * s, 0, Math.PI * 2); ctx.fill();
     } });
     parts.sort((a, b) => a.z - b.z).forEach(p => p.fn());
     // Markierung der Fokus-Stelle
