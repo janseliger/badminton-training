@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c6a49">
+<title>Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <a class="back" href="./">← Alle Einheiten</a>
+      <h1 id="title">Training</h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div class="grid">
+    <section class="stage" id="stage" data-ph="rest" aria-live="polite">
+      <div class="prog">
+        <div class="bar"><i id="pbar"></i></div>
+        <div class="row"><span id="elapsed">0:00</span><span id="remainTotal">noch 0:00</span></div>
+      </div>
+      <div class="top"><span class="chip" id="chip">Bereit machen</span><span class="partl" id="partl"></span></div>
+
+      <div class="board">
+        <div class="ring">
+          <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="bgc" cx="100" cy="100" r="88"/><circle class="fgc" id="fgc" cx="100" cy="100" r="88"/></svg>
+          <div class="num" id="num">0</div>
+          <div class="sub" id="ringsub">Sek.</div>
+        </div>
+        <div class="info">
+          <div class="lead" id="lead">Gleich</div>
+          <h2 class="name" id="name"></h2>
+          <div class="dose" id="dose"></div>
+          <div class="alert" id="alert" hidden>Seite wechseln</div>
+        </div>
+      </div>
+
+      <div class="explain" id="explain">
+        <div class="player" id="player" hidden><div id="ytp"></div></div>
+        <a class="vid" id="vid" href="#" target="_blank" rel="noopener">
+          <span class="play" aria-hidden="true"></span>
+          <span><b id="vidt">Video ansehen</b><span id="vids"></span></span>
+        </a>
+        <p><span class="k">So geht's</span><span id="how"></span></p>
+        <p id="focusP"><span class="k">Darauf achten</span><span id="focus"></span></p>
+        <p id="lightP"><span class="k">Leichter</span><span id="light"></span></p>
+      </div>
+
+      <div class="ctrl">
+        <button class="btn" id="prev" type="button" aria-label="Vorheriger Abschnitt">◀ Zurück</button>
+        <button class="btn main" id="play" type="button">Start</button>
+        <button class="btn" id="next" type="button" aria-label="Nächster Abschnitt">Weiter ▶</button>
+        <span class="spacer"></span>
+        <button class="tog" id="tSound" type="button" aria-pressed="true"><i></i>Signalton</button>
+        <button class="tog" id="tSpeech" type="button" aria-pressed="false"><i></i>Ansage</button>
+        <button class="btn" id="reset" type="button">Neustart</button>
+      </div>
+      <div class="keys">Leertaste: Start/Pause · ← →: Abschnitt zurück/weiter</div>
+    </section>
+
+    <aside class="plan">
+      <h2>Ablauf</h2>
+      <div id="planList"></div>
+      <p class="src" id="src"></p>
+    </aside>
+  </div>
+</div>
+<script src="assets/timer.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c6a49">
+<title>Badminton-Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Badminton-Training</h1>
+    <div class="meta">USV TU Dresden</div>
+  </header>
+  <p class="intro">Einheiten zum Mitmachen mit Intervall-Timer. Zu jeder Übung läuft der Videoausschnitt, in dem sie vorgemacht wird.</p>
+  <div class="list" id="list"></div>
+</div>
+<script src="workouts/list.js"></script>
+<script>
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  document.getElementById("list").innerHTML = (window.WORKOUT_LIST || []).map(w =>
+    `<a class="card" href="timer.html?w=${encodeURIComponent(w.id)}">
+      <span class="tag"><span>${esc(w.group || "")}</span><span>${esc(w.minutes)} Min.</span></span>
+      <h2>${esc(w.title)}</h2>
+      <p>${esc(w.text || "")}</p>
+      <span class="go">Starten ▶</span>
+    </a>`).join("");
+</script>
+</body>
+</html>
