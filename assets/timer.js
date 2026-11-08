@@ -11,7 +11,7 @@
 
   window.WORKOUT = w => start(w);
   const sc = document.createElement("script");
-  sc.src = "workouts/" + id + ".js?v=4";
+  sc.src = "workouts/" + id + ".js?v=5";
   sc.onerror = () => fail("Diese Einheit gibt es nicht.");
   document.head.appendChild(sc);
 
@@ -52,7 +52,7 @@
 
     $("meta").textContent = `${W.subtitle ? W.subtitle + " · " : ""}${Math.round(TOTAL / 60)} Min.`;
     $("src").innerHTML = "Videos: " + Object.values(VID).map(v => `<a href="https://youtu.be/${esc(v.id)}" target="_blank" rel="noopener">${esc(v.name)}</a>`).join(" · ") +
-      ". Der Player zeigt nur den Abschnitt, in dem die Übung vorgemacht wird. Tipp: Seite ein, zwei Minuten vor dem Start öffnen, dann ist die YouTube-Werbung vor den Videos schon durch.";
+      ". Die Figur zeigt die Bewegung schematisch, der orange Ring die Stelle, auf die man achtet. Mit „Video“ läuft der Ausschnitt aus dem Originalvideo. Tipp dafür: Seite ein, zwei Minuten vorher öffnen, dann ist die YouTube-Werbung durch.";
 
     /* Ablauf-Liste */
     const box = $("planList");
@@ -109,7 +109,7 @@
           events: {
             onReady: ev => {
               rec.ok = true; ev.target.mute(); ev.target.playVideo();
-              if (!ytOk) { ytOk = true; $("player").hidden = false; render(); }
+              if (!ytOk) { ytOk = true; render(); }
               else if (curV && curV.k === k) show(curV);
             },
             onStateChange: ev => { if (ev.data === 0) { ev.target.seekTo(rec.seg.t, true); ev.target.playVideo(); } }
@@ -117,7 +117,22 @@
         });
       });
     };
-    const ys = document.createElement("script"); ys.src = "https://www.youtube.com/iframe_api"; ys.async = true; document.head.appendChild(ys);
+    let ytLoading = false;
+    function loadYT() { if (ytLoading) return; ytLoading = true; const ys = document.createElement("script"); ys.src = "https://www.youtube.com/iframe_api"; ys.async = true; document.head.appendChild(ys); }
+
+    /* Ansicht: animierte Figur (Standard) oder Videoausschnitt */
+    const fig = window.FigurePlayer && window.FIGS ? FigurePlayer($("figc")) : null;
+    let mode = "fig";
+    try { if (localStorage.getItem("bt-mode") === "vid") mode = "vid"; } catch (e) {}
+    function setMode(m) {
+      mode = m; try { localStorage.setItem("bt-mode", m); } catch (e) {}
+      $("mFig").setAttribute("aria-pressed", m === "fig"); $("mVid").setAttribute("aria-pressed", m === "vid");
+      if (m === "vid") loadYT();
+      Object.values(P).forEach(r => { try { r.ok && (m === "vid" ? r.yt.playVideo() : r.yt.pauseVideo()); } catch (e) {} });
+      render();
+    }
+    $("mFig").addEventListener("click", () => setMode("fig"));
+    $("mVid").addEventListener("click", () => setMode("vid"));
     function show(x) {
       const rec = P[x.k];
       Object.values(P).forEach(r => r.box.classList.toggle("on", r === rec));
@@ -131,6 +146,7 @@
       curV = x; show(x);
     }
     setInterval(() => {
+      if (mode !== "vid") return;
       Object.values(P).forEach(r => {
         if (!r.ok) return;
         try {
@@ -166,11 +182,17 @@
       $("how").textContent = s.how || "";
       $("focus").textContent = s.focus || ""; $("focusP").hidden = !s.focus;
       $("light").textContent = s.light || ""; $("lightP").hidden = !s.light;
-      const a = $("vid"); a.href = vurl(s.v); a.classList.toggle("small", isW || ytOk);
-      $("vidt").textContent = ytOk ? "Auf YouTube öffnen" : (isW ? "Video" : "Video ansehen ab " + fmt(s.v.t));
+      const hasFig = !!(fig && s.fig && FIGS[s.fig]);
+      const showFig = hasFig && mode === "fig";
+      $("figbox").hidden = !showFig; $("player").hidden = showFig || !ytOk;
+      document.querySelector(".viewsw").hidden = !hasFig;
+      if (showFig) fig.set(FIGS[s.fig]);
+      if (!hasFig && mode === "fig") loadYT();
+      const a = $("vid"); a.href = vurl(s.v); a.classList.toggle("small", isW || ytOk || showFig);
+      $("vidt").textContent = (ytOk || showFig) ? "Auf YouTube öffnen" : (isW ? "Video" : "Video ansehen ab " + fmt(s.v.t));
       $("vids").textContent = " " + VID[s.v.k].name;
       $("ringsub").textContent = isW ? (s.work ? "Sek." : (e.p.workLabel || "Sek.")) : "Pause";
-      cue(s.v);
+      if (!showFig) cue(s.v);
       markPlan(); update();
     }
     function markPlan() {
@@ -234,6 +256,8 @@
       else if (ev.key === "ArrowLeft") go(idx - 1);
     });
 
+    $("mFig").setAttribute("aria-pressed", mode === "fig"); $("mVid").setAttribute("aria-pressed", mode === "vid");
+    if (mode === "vid") loadYT();
     render(); requestAnimationFrame(frame);
   }
 })();
