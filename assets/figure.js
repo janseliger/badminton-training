@@ -133,7 +133,7 @@
       let extra = [0, 0, 0], pl = pole0;
       for (let it = 0; it < 2; it++) {
         const R0 = J[rootK], E = J[jointK], H = J[endK];
-        const pts = [v.add(R0, v.mul(v.sub(E, R0), .45)), v.add(R0, v.mul(v.sub(E, R0), .75)), E, v.add(E, v.mul(v.sub(H, E), .5)), H];
+        const pts = [v.add(R0, v.mul(v.sub(E, R0), .65)), E, v.add(E, v.mul(v.sub(H, E), .5)), H];
         const pen = Math.max(...pts.map(pt => depth(pt, list)));
         if (pen <= 0) return;
         // Ziel stufenlos nach außen nehmen und Ellbogen/Knie stufenlos nach außen drehen
