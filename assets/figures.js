@@ -7,7 +7,7 @@ window.FIGS = (function () {
   /* gemeinsame Ausgangsposen */
   const tallKneel = (o = {}) => Object.assign({ P: [2, 45], t: 180, fN: [-36, 3], fF: [-36, 3], kN: [1, -.3, 0] }, o);
   const supine = (o = {}) => Object.assign({ P: [0, 9], t: -90 }, o);
-  const plank = (o = {}) => Object.assign({ P: [0, 30], t: 112, hd: 8, hN: [50, 0], hF: [50, 0], fN: [-70, 0], fF: [-70, 0], kN: [1, -.6, 0] }, o);
+  const plank = (o = {}) => Object.assign({ P: [0, 32], t: 112, hd: 8, hN: [50, 0], hF: [50, 0], fN: [-70, 0], fF: [-70, 0], kN: [1, -.6, 0] }, o);
   const lunge = (o = {}) => Object.assign({ P: [0, 24], t: 116, fN: [42, 0], fF: [-58, 2], kN: [1, .3, 0], kF: [1, -1, 0] }, o);
   const sideLie = (o = {}) => Object.assign({ P: [0, 17], t: 90, roll: -90, hd: 0,
     fN: [-38, 14, 40], fF: [-38, 3, 40], kN: [0, 0, 1], hN: [52, 8, 46], hF: [52, 2, 46], eN: [0, 0, 1], eF: [0, 0, 1] }, o);
@@ -152,7 +152,7 @@ window.FIGS = (function () {
   "Hüfte nach vorn strecken"
  ],
  "sprunggelenk": [
-  "Zurück",
+  "Zurück, Ferse bleibt am Boden",
   "Knie über die Zehen schieben"
  ],
  "9090-haende": [
@@ -176,8 +176,8 @@ window.FIGS = (function () {
   "Wieder absetzen"
  ],
  "ausfall-rotation": [
-  "Hände neben den vorderen Fuß",
-  "Arm zur Decke aufdrehen"
+  "Beide Hände neben den vorderen Fuß",
+  "Inneren Arm zur Decke aufdrehen"
  ],
  "bws": [
   "Mitte",
@@ -240,23 +240,23 @@ window.FIGS = (function () {
   "Hüfte nach vorn sinken lassen"
  ],
  "open-book": [
-  "Seitlage, Arme vorn",
-  "Arm nach oben öffnen",
-  "Brust zeigt zur Decke",
-  "Zurück nach vorn"
+  "Seitlage, Knie gestapelt, Arme vorn",
+  "Oberen Arm nach oben öffnen",
+  "Arm und Brust nach hinten öffnen",
+  "Langsam zurück"
  ],
  "grosse-kreise": [
-  "Großer Kreis mit der Hand",
-  "Großer Kreis mit der Hand",
-  "Großer Kreis mit der Hand",
-  "Großer Kreis mit der Hand",
-  "Großer Kreis mit der Hand",
-  "Großer Kreis mit der Hand",
-  "Großer Kreis mit der Hand",
-  "Großer Kreis mit der Hand"
+  "Arm vorn",
+  "Arm vorn",
+  "Über den Kopf kreisen",
+  "Über den Kopf kreisen",
+  "Nach hinten",
+  "Nach hinten",
+  "Am Körper vorbei nach vorn",
+  "Am Körper vorbei nach vorn"
  ]
 };
-  const views = {"open-book": [{"yaw": 0, "pitch": 86}], "grosse-kreise": [{"yaw": 0, "pitch": 86}], "russian-twist": [{"yaw": -40, "pitch": 30, "label": "Schräg"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "fersensitz": [{"yaw": -2, "pitch": 6}], "9090-haende": [{"yaw": -78, "pitch": 26}], "9090-frei": [{"yaw": -78, "pitch": 26}], "9090-streck": [{"yaw": -78, "pitch": 24}], "das-t": [{"yaw": -82, "pitch": 30, "label": "Vom Kopf aus"}, {"yaw": -2, "pitch": 6, "label": "Von der Seite"}]};
+  const views = {"open-book": [{"yaw": -90, "pitch": 24, "label": "Vom Kopf aus"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "grosse-kreise": [{"yaw": -90, "pitch": 24, "label": "Vom Kopf aus"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "russian-twist": [{"yaw": -40, "pitch": 30, "label": "Schräg"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "fersensitz": [{"yaw": -2, "pitch": 6}], "9090-haende": [{"yaw": -78, "pitch": 26, "label": "Von vorn"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "9090-frei": [{"yaw": -78, "pitch": 26, "label": "Von vorn"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "9090-streck": [{"yaw": -78, "pitch": 24, "label": "Von vorn"}, {"yaw": -2, "pitch": 6, "label": "Von der Seite"}], "das-t": [{"yaw": -90, "pitch": 36, "label": "Vom Kopf aus"}, {"yaw": -2, "pitch": 6, "label": "Von der Seite"}], "bws": [{"yaw": -30, "pitch": 18, "label": "Schräg"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "situp-drehung": [{"yaw": -28, "pitch": 18, "label": "Schräg"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}]};
   Object.keys(caps).forEach(k => F[k] && F[k].frames.forEach((f, i) => { if (caps[k][i]) f.cap = caps[k][i]; }));
   Object.keys(views).forEach(k => { if (F[k]) F[k].views = views[k]; });
 })(window.FIGS);
