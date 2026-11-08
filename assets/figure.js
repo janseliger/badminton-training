@@ -246,7 +246,7 @@
     parts.push({ z: torsoZ, fn: () => {
       ctx.lineJoin = "round";
       path([J.shN, J.shF, J.hipF, J.hipN], true); ctx.strokeStyle = halo; ctx.lineWidth = 11 * s; ctx.stroke();
-      const quad = (pts, n) => { const col = mixHex(ink, chest, Math.max(0, Math.min(1, (facing(n) + .55) / .8))); path(pts, true); ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 8 * s; ctx.fill(); ctx.stroke(); };
+      const quad = (pts, n) => { const col = mixHex(ink, chest, Math.max(.28, Math.min(1, (facing(n) + .55) / .8))); path(pts, true); ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 8 * s; ctx.fill(); ctx.stroke(); };
       // die vom Betrachter abgewandte Hälfte zuerst
       const up = [[J.shN, J.shF, mF, mN], J.f], low = [[mN, mF, J.hipF, J.hipN], J.fLow];
       const zz = q => q[0].reduce((a, p) => a + X(p)[2], 0);
