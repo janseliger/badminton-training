@@ -18,7 +18,7 @@
  * Animation: { frames:[{p, d, hold}], cam:{yaw,pitch}, mark:"lowback"|"P"|"S"|"fN"|"kN"|..., label }
  */
 (function () {
-  const L = { torso: 50, neck: 6, head: 9, ua: 27, fa: 25, th: 41, sh: 40, hipW: 20, shW: 32 };
+  const L = { torso: 50, neck: 6, head: 9, ua: 27, fa: 25, th: 41, sh: 40, hipW: 20, shW: 36 };
   const R = a => a * Math.PI / 180;
   const v = {
     add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
@@ -91,13 +91,63 @@
     };
     const pole = (x, def) => !x ? def : (x.l ? loc(x.l) : x);
     const defK = v.add(f, v.mul(u, -0.15)), defE = v.add(v.mul(f, -1), v.mul(u, -0.2));
-    const aN = ik(J.shN, tgt(p.hN, 1, "h"), L.ua, L.fa, pole(p.eN, defE));
-    const aF = ik(J.shF, tgt(p.hF, -1, "h"), L.ua, L.fa, pole(p.eF, p.eN ? pole(p.eN) : defE));
+    // Ellbogen zeigen von sich aus leicht nach hinten und außen (wie bei einem echten Arm)
+    const defEN = v.norm(v.add(v.add(v.mul(f, -.6), v.mul(s, .7)), v.mul(u, -.2)));
+    const defEF = v.norm(v.add(v.add(v.mul(f, -.6), v.mul(s, -.7)), v.mul(u, -.2)));
+    const aN = ik(J.shN, tgt(p.hN, 1, "h"), L.ua, L.fa, pole(p.eN, defEN));
+    const aF = ik(J.shF, tgt(p.hF, -1, "h"), L.ua, L.fa, pole(p.eF, p.eN ? pole(p.eN) : defEF));
     const fN = tgt(p.fN, 1, "f") || v.add(J.hipN, v.mul(u, -80));
     const fF = tgt(p.fF, -1, "f") || v.add(J.hipF, v.mul(u, -80));
     const lN = ik(J.hipN, fN, L.th, L.sh, pole(p.kN, defK));
     const lF = ik(J.hipF, fF, L.th, L.sh, pole(p.kF, p.kN ? pole(p.kN) : defK));
     Object.assign(J, { eN: aN.joint, hN: aN.end, eF: aF.joint, hF: aF.end, kN: lN.joint, fN: lN.end, kF: lF.joint, fF: lF.end });
+
+    /* Keine Überschneidung mit dem Körper: Volumen von Brustkorb, Taille, Becken und Kopf (plus Gliedmaßendicke) */
+    const chestC = v.add(S, v.mul(v.sub(P, S), .28)), waistC = v.add(P, v.mul(v.sub(S, P), .36));
+    const vols = [
+      { c: chestC, r: [19.5, 23, 15] }, { c: waistC, r: [14, 14, 13] }, { c: P, r: [16.5, 12, 12.5] },
+      { c: head, r: [12, 13, 12] }
+    ];
+    const inside = (pt, list) => {
+      for (const b of list) {
+        const d = v.sub(pt, b.c), x = v.dot(d, s) / b.r[0], y = v.dot(d, u) / b.r[1], z = v.dot(d, f) / b.r[2];
+        const e = x * x + y * y + z * z;
+        if (e < 1) return { b, e, d };
+      }
+      return null;
+    };
+    const pushOut = (pt, list) => {
+      let q = pt;
+      for (let i = 0; i < 3; i++) {
+        const hit = inside(q, list); if (!hit) break;
+        const k = 1 / Math.sqrt(Math.max(hit.e, 1e-4)) + .02;
+        let d = hit.d; if (v.len(d) < .5) d = v.mul(s, 1);
+        q = v.add(hit.b.c, v.mul(d, k));
+      }
+      return q;
+    };
+    const fixLimb = (rootK, jointK, endK, l1, l2, side, list, poleOut) => {
+      let extra = [0, 0, 0];
+      for (let it = 0; it < 8; it++) {
+        const R0 = J[rootK], E = J[jointK], H = J[endK];
+        const pts = [v.add(R0, v.mul(v.sub(E, R0), .45)), v.add(R0, v.mul(v.sub(E, R0), .75)), E, v.add(E, v.mul(v.sub(H, E), .5)), H];
+        if (!pts.some(pt => inside(pt, list))) return;
+        // Ziel aus dem Körper schieben und, falls der Arm noch durch den Rumpf geht, Stück für Stück nach außen nehmen
+        if (it > 0) extra = v.add(extra, v.mul(poleOut, 5));
+        const tgt2 = pushOut(v.add(H, extra), list);
+        // Ellbogen/Knie nach außen weg vom Körper beugen
+        let away = v.sub(pushOut(E, list), E);
+        if (v.len(away) < .5) away = v.mul(s, side);
+        const pole2 = v.norm(v.add(v.norm(away), v.mul(poleOut, .5)));
+        const res = ik(R0, tgt2, l1, l2, pole2);
+        J[jointK] = res.joint; J[endK] = res.end;
+      }
+    };
+    fixLimb("shN", "eN", "hN", L.ua, L.fa, 1, vols, v.mul(s, 1));
+    fixLimb("shF", "eF", "hF", L.ua, L.fa, -1, vols, v.mul(s, -1));
+    // Beine nur gegen Brustkorb und Kopf prüfen (der Oberschenkel setzt am Becken an)
+    fixLimb("hipN", "kN", "fN", L.th, L.sh, 1, [vols[0], vols[3]], v.mul(s, 1));
+    fixLimb("hipF", "kF", "fF", L.th, L.sh, -1, [vols[0], vols[3]], v.mul(s, -1));
     ["eN", "hN", "eF", "hF", "kN", "fN", "kF", "fF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
     // Blickrichtung (Brust) und Bauchrichtung für die Darstellung
     let sl = v.sub(ax, v.mul(u, v.dot(ax, u))); sl = v.len(sl) < 1e-3 ? s : v.norm(sl);

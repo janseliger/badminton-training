@@ -59,7 +59,7 @@ window.FIGS = (function () {
     ]},
 
     "situp-drehung": { cam: { yaw: -28, pitch: 18 }, frames: [
-      { d: 1, hold: .3, p: supine({ fN: [32, 0], fF: [32, 0], kN: up, hN: { at: "shN", w: [0, 50, 0] }, hF: [-4, 2, -18] }) },
+      { d: 1, hold: .3, p: supine({ fN: [32, 0], fF: [32, 0], kN: up, hN: { at: "shN", w: [0, 50, 0] }, hF: [-6, 2, -22] }) },
       { d: 1.1, hold: .5, p: supine({ t: -205, tw: -60, fN: [32, 0], fF: [32, 0], kN: up, hN: { at: "shN", w: [0, 50, 0] }, hF: { at: "S", w: [24, -24, -8] } }) }
     ]},
 

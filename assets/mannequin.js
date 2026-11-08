@@ -123,7 +123,7 @@
       // Brustkorb
       const chestC = lerp(J.S, J.P, .28);
       const br = 1 + .03 * Math.sin(breath);
-      parts.chest.set(chestC, sAx, J.u, J.f, 17.5 * (1 + .01 * Math.sin(breath)), 19, 10.5 * br);
+      parts.chest.set(chestC, sAx, J.u, J.f, 15.5 * (1 + .01 * Math.sin(breath)), 19, 10.5 * br);
       // Becken
       const pelC = lerp(J.P, J.S, .02);
       parts.pelvis.set(pelC, pAx, J.u, J.fLow, 14.5, 10, 9.5);
