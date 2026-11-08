@@ -13,9 +13,9 @@ window.FIGS = (function () {
     fN: [-38, 14, 40], fF: [-38, 3, 40], kN: [0, 0, 1], hN: [52, 8, 46], hF: [52, 2, 46], eN: [0, 0, 1], eF: [0, 0, 1] }, o);
 
   return {
-    fersensitz: { trail: "P", mark: "lowback", cam: { yaw: -48, pitch: 16 }, frames: [
-      { d: 1, hold: 2.2, p: { P: [-16, 24], t: 180, fN: [-26, 2], fF: [-26, 2], kN: fwd } },
-      { d: 1.1, hold: .7, p: { P: [14, 45], t: 180, fN: [-26, 2], fF: [-26, 2], kN: [1, -1, 0] } }
+    fersensitz: { trail: "P", mark: "lowback", cam: { yaw: -26, pitch: 12 }, frames: [
+      { d: 1.1, hold: 2.2, p: { P: [-18, 21], t: 172, fN: [-26, 2, 14], fF: [-26, 2, -14], kN: fwd } },
+      { d: 1.2, hold: .8, p: { P: [14, 46], t: 180, fN: [-26, 2, 14], fF: [-26, 2, -14], kN: [1, -1, 0] } }
     ]},
 
     sprunggelenk: { trail: "kN", mark: "fN", cam: { yaw: -16, pitch: 10 }, frames: [
@@ -63,16 +63,16 @@ window.FIGS = (function () {
       { d: 1.1, hold: .5, p: supine({ t: -205, tw: -35, fN: [32, 0], fF: [32, 0], kN: up, hN: { at: "shN", w: [0, 50, 0] }, hF: { at: "S", w: [24, -24, -8] } }) }
     ]},
 
-    "vsit-einbeinig": { trail: ["fN", "fF"], cam: { yaw: -26, pitch: 16 }, frames: [
-      { d: .9, hold: .3, p: supine({ fN: [80, 4], fF: [80, 4], hN: [2, 2, 18], hF: [0, 2, -18] }) },
-      { d: .9, hold: .4, p: supine({ t: -138, hd: 15, fN: [40, 72], fF: [80, 4], hN: [36, 56, 12], hF: [36, 56, 4], eN: [0, -1, 0] }) },
-      { d: .9, hold: .3, p: supine({ fN: [80, 4], fF: [80, 4], hN: [2, 2, 18], hF: [0, 2, -18] }) },
-      { d: .9, hold: .4, p: supine({ t: -138, hd: 15, fN: [80, 4], fF: [40, 72], hN: [36, 56, -4], hF: [36, 56, -12], eN: [0, -1, 0] }) }
+    "vsit-einbeinig": { trail: [], cam: { yaw: -30, pitch: 18 }, frames: [
+      { d: .9, hold: .4, p: supine({ fN: [80, 4], fF: [80, 4], hN: [2, 2, 18], hF: [0, 2, -18] }) },
+      { d: 1, hold: .6, p: supine({ t: -140, hd: 18, fN: [44, 72], fF: [80, 4], hN: [38, 58, 13], hF: [38, 58, 6], eN: [0, -1, 0] }) },
+      { d: .9, hold: .4, p: supine({ fN: [80, 4], fF: [80, 4], hN: [2, 2, 18], hF: [0, 2, -18] }) },
+      { d: 1, hold: .6, p: supine({ t: -140, hd: 18, fN: [80, 4], fF: [44, 72], hN: [38, 58, -6], hF: [38, 58, -13], eN: [0, -1, 0] }) }
     ]},
 
-    "hollow-rocks": { trail: ["fN"], mark: "lowback", cam: { yaw: -24, pitch: 14 }, frames: [
-      { d: .8, hold: 0, p: { P: [0, 8], t: -120, hd: 12, fN: [80, 6], fF: [80, 6], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } },
-      { d: .8, hold: 0, p: { P: [0, 8], t: -94, hd: 12, fN: [74, 34], fF: [74, 34], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } }
+    "hollow-rocks": { trail: ["fN", "head"], mark: "lowback", cam: { yaw: -26, pitch: 14 }, frames: [
+      { d: .8, hold: 0, p: { P: [0, 8], t: -116, hd: 10, fN: [80, 15], fF: [80, 15], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } },
+      { d: .8, hold: 0, p: { P: [0, 8], t: -100, hd: 10, fN: [75, 35], fF: [75, 35], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } }
     ]},
 
     fahrrad: { trail: ["kN", "kF"], cam: { yaw: -26, pitch: 22 }, frames: [
@@ -85,9 +85,9 @@ window.FIGS = (function () {
       { d: .9, hold: .2, p: { P: [0, 10], t: 208, hN: [-30, 1, 18], hF: [-30, 1, -18], fN: [74, 26], fF: [74, 26], kN: up } }
     ]},
 
-    "russian-twist": { trail: ["hN"], cam: { yaw: -60, pitch: 38 }, frames: [
-      { d: .9, hold: .3, p: { P: [0, 10], t: 212, tw: 58, fN: [34, 3], fF: [34, 3], kN: up, hN: [8, 6, 34], hF: [10, 8, 28] } },
-      { d: .9, hold: .3, p: { P: [0, 10], t: 212, tw: -58, fN: [34, 3], fF: [34, 3], kN: up, hN: [10, 8, -28], hF: [8, 6, -34] } }
+    "russian-twist": { trail: ["hN"], cam: { yaw: -40, pitch: 30 }, frames: [
+      { d: .9, hold: .3, p: { P: [0, 10], t: 216, tw: 55, fN: [34, 4], fF: [34, 4], kN: up, hN: [12, 8, 30], hF: [12, 8, 26] } },
+      { d: .9, hold: .3, p: { P: [0, 10], t: 216, tw: -55, fN: [34, 4], fF: [34, 4], kN: up, hN: [12, 8, -26], hF: [12, 8, -30] } }
     ]},
 
     "flutter-kicks": { trail: ["fN", "fF"], mark: "lowback", cam: { yaw: -24, pitch: 14 }, frames: [
@@ -124,14 +124,14 @@ window.FIGS = (function () {
       { d: 1.6, hold: 1.2, p: { P: [10, 22], t: 176, fN: [42, 0], fF: [-52, 2], kN: [1, .3, 0], kF: [1, -1, 0], hN: { at: "hipN", w: [2, 4, 6] }, hF: { at: "hipF", w: [2, 4, -6] }, eN: [-1, 0, .4], eF: [-1, 0, -.4] } }
     ]},
 
-    "open-book": { trail: "hN", cam: { yaw: 50, pitch: 48 }, frames: [
-      { d: 1, hold: .5, p: sideLie() },
-      { d: 1.1, hold: 0, p: sideLie({ tw: -45, hN: { at: "S", w: [4, 52, 0] } }) },
-      { d: 1.1, hold: .8, p: sideLie({ tw: -85, hN: [52, 12, -46] }) },
-      { d: 1.1, hold: 0, p: sideLie({ tw: -45, hN: { at: "S", w: [4, 52, 0] } }) }
+    "open-book": { trail: "hN", cam: { yaw: 58, pitch: 24 }, frames: [
+      { d: 1, hold: .6, p: sideLie() },
+      { d: 1.1, hold: 0, p: sideLie({ tw: -45, hd: -20, hN: { at: "S", w: [2, 64, 0] } }) },
+      { d: 1.1, hold: 1, p: sideLie({ tw: -85, hd: -40, hN: [52, 14, -46] }) },
+      { d: 1.1, hold: 0, p: sideLie({ tw: -45, hd: -20, hN: { at: "S", w: [2, 64, 0] } }) }
     ]},
 
-    "grosse-kreise": { trail: "hN", cam: { yaw: 50, pitch: 48 }, frames: [
+    "grosse-kreise": { trail: "hN", cam: { yaw: 58, pitch: 24 }, frames: [
       { d: .55, hold: 0, p: sideLie({ tw: 0, hN: { at: "S", w: [0, 14, 42] } }) },
       { d: .55, hold: 0, p: sideLie({ tw: -13, hN: { at: "S", w: [33, 22, 30] } }) },
       { d: .55, hold: 0, p: sideLie({ tw: -45, hN: { at: "S", w: [46, 30, 0] } }) },
