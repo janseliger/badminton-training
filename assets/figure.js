@@ -90,7 +90,8 @@
       return b;
     };
     const pole = (x, def) => !x ? def : (x.l ? loc(x.l) : x);
-    const defK = v.add(f, v.mul(u, -0.15)), defE = v.add(v.mul(f, -1), v.mul(u, -0.2));
+    // Knie zeigen von sich aus nach vorn oben (weltfest, damit sie beim Aufrichten des Rumpfs nicht umklappen)
+    const defK = v.norm([Math.cos(ya), .6, -Math.sin(ya)]), defE = v.add(v.mul(f, -1), v.mul(u, -0.2));
     // Ellbogen zeigen von sich aus leicht nach hinten und außen (wie bei einem echten Arm)
     const defEN = v.norm(v.add(v.add(v.mul(f, -.6), v.mul(s, .7)), v.mul(u, -.2)));
     const defEF = v.norm(v.add(v.add(v.mul(f, -.6), v.mul(s, -.7)), v.mul(u, -.2)));
@@ -126,28 +127,28 @@
       }
       return q;
     };
-    const fixLimb = (rootK, jointK, endK, l1, l2, side, list, poleOut) => {
-      let extra = [0, 0, 0];
-      for (let it = 0; it < 8; it++) {
+    // stufenlos: wie tief ein Punkt im Körper steckt (0 = außen, 1 = in der Mitte)
+    const depth = (pt, list) => { let m = 0; for (const b of list) { const d = v.sub(pt, b.c), x = v.dot(d, s) / b.r[0], y = v.dot(d, u) / b.r[1], z = v.dot(d, f) / b.r[2]; m = Math.max(m, 1 - Math.sqrt(x * x + y * y + z * z)); } return m; };
+    const fixLimb = (rootK, jointK, endK, l1, l2, side, list, poleOut, pole0) => {
+      let extra = [0, 0, 0], pl = pole0;
+      for (let it = 0; it < 2; it++) {
         const R0 = J[rootK], E = J[jointK], H = J[endK];
         const pts = [v.add(R0, v.mul(v.sub(E, R0), .45)), v.add(R0, v.mul(v.sub(E, R0), .75)), E, v.add(E, v.mul(v.sub(H, E), .5)), H];
-        if (!pts.some(pt => inside(pt, list))) return;
-        // Ziel aus dem Körper schieben und, falls der Arm noch durch den Rumpf geht, Stück für Stück nach außen nehmen
-        if (it > 0) extra = v.add(extra, v.mul(poleOut, 5));
-        const tgt2 = pushOut(v.add(H, extra), list);
-        // Ellbogen/Knie nach außen weg vom Körper beugen
-        let away = v.sub(pushOut(E, list), E);
-        if (v.len(away) < .5) away = v.mul(s, side);
-        const pole2 = v.norm(v.add(v.norm(away), v.mul(poleOut, .5)));
-        const res = ik(R0, tgt2, l1, l2, pole2);
+        const pen = Math.max(...pts.map(pt => depth(pt, list)));
+        if (pen <= 0) return;
+        // Ziel stufenlos nach außen nehmen und Ellbogen/Knie stufenlos nach außen drehen
+        extra = v.add(extra, v.mul(poleOut, 16 * pen));
+        const w = Math.min(1, pen * 1.6);
+        pl = v.norm(v.add(v.mul(v.norm(pl), 1 - w), v.mul(poleOut, w)));
+        const res = ik(R0, pushOut(v.add(H, extra), list), l1, l2, pl);
         J[jointK] = res.joint; J[endK] = res.end;
       }
     };
-    fixLimb("shN", "eN", "hN", L.ua, L.fa, 1, vols, v.mul(s, 1));
-    fixLimb("shF", "eF", "hF", L.ua, L.fa, -1, vols, v.mul(s, -1));
+    fixLimb("shN", "eN", "hN", L.ua, L.fa, 1, vols, v.mul(s, 1), pole(p.eN, defEN));
+    fixLimb("shF", "eF", "hF", L.ua, L.fa, -1, vols, v.mul(s, -1), pole(p.eF, p.eN ? pole(p.eN) : defEF));
     // Beine nur gegen Brustkorb und Kopf prüfen (der Oberschenkel setzt am Becken an)
-    fixLimb("hipN", "kN", "fN", L.th, L.sh, 1, [vols[0], vols[3]], v.mul(s, 1));
-    fixLimb("hipF", "kF", "fF", L.th, L.sh, -1, [vols[0], vols[3]], v.mul(s, -1));
+    fixLimb("hipN", "kN", "fN", L.th, L.sh, 1, [vols[0], vols[3]], v.mul(s, 1), pole(p.kN, defK));
+    fixLimb("hipF", "kF", "fF", L.th, L.sh, -1, [vols[0], vols[3]], v.mul(s, -1), pole(p.kF, p.kN ? pole(p.kN) : defK));
     ["eN", "hN", "eF", "hF", "kN", "fN", "kF", "fF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
     // Blickrichtung (Brust) und Bauchrichtung für die Darstellung
     let sl = v.sub(ax, v.mul(u, v.dot(ax, u))); sl = v.len(sl) < 1e-3 ? s : v.norm(sl);
@@ -171,7 +172,41 @@
   const ease = k => -(Math.cos(Math.PI * Math.max(0, Math.min(1, k))) - 1) / 2;
   const total = a => a.frames.reduce((s, f) => s + (f.d || 0) + (f.hold || 0), 0);
   // Gelenkpositionen interpolieren statt Posen: stabiler bei Zielen in verschiedenen Formaten
+  /* Vorberechnet und zeitlich geglättet: 60 Bilder pro Sekunde, sanfter Filter über ±5 Bilder,
+     danach Knochenlängen wieder exakt herstellen. Entfernt jedes Zucken. */
+  const FPS = 60;
+  function cacheOf(anim) {
+    if (anim._cache) return anim._cache;
+    const T = total(anim), n = Math.max(2, Math.round(T * FPS)), raw = [];
+    for (let i = 0; i < n; i++) raw.push(jointsRaw(anim, T * i / n));
+    const keys = Object.keys(raw[0]).filter(k => Array.isArray(raw[0][k]) && raw[0][k].length === 3);
+    const W = 8, wts = []; let ws = 0;
+    for (let j = -W; j <= W; j++) { const w = Math.exp(-(j * j) / (2 * 3.4 * 3.4)); wts.push(w); ws += w; }
+    const out = raw.map((_, i) => {
+      const J = {};
+      keys.forEach(k => {
+        let acc = [0, 0, 0];
+        for (let j = -W; j <= W; j++) acc = v.add(acc, v.mul(raw[(i + j + n) % n][k], wts[j + W] / ws));
+        J[k] = acc;
+      });
+      ["f", "fLow", "u", "hu"].forEach(k => { if (J[k]) J[k] = v.norm(J[k]); });
+      // Knochenlängen wiederherstellen
+      const fix = (r, j, e, l1, l2) => { const pol = v.sub(J[j], v.add(J[r], v.mul(v.norm(v.sub(J[e], J[r])), v.dot(v.sub(J[j], J[r]), v.norm(v.sub(J[e], J[r])))))); const res = ik(J[r], J[e], l1, l2, v.len(pol) > .01 ? pol : J.f); J[j] = res.joint; J[e] = res.end; };
+      fix("shN", "eN", "hN", L.ua, L.fa); fix("shF", "eF", "hF", L.ua, L.fa);
+      fix("hipN", "kN", "fN", L.th, L.sh); fix("hipF", "kF", "fF", L.th, L.sh);
+      return J;
+    });
+    return (anim._cache = { T, n, out, keys });
+  }
   function jointsAt(anim, t) {
+    const c = cacheOf(anim);
+    let x = ((t % c.T) + c.T) % c.T / c.T * c.n;
+    const i = Math.floor(x) % c.n, j = (i + 1) % c.n, k = x - Math.floor(x);
+    const A = c.out[i], B = c.out[j], J = {};
+    c.keys.forEach(key => { J[key] = v.add(A[key], v.mul(v.sub(B[key], A[key]), k)); });
+    return J;
+  }
+  function jointsRaw(anim, t) {
     const F = anim.frames; t = ((t % total(anim)) + total(anim)) % total(anim);
     for (let i = 0; i < F.length; i++) {
       const f = F[i], prev = F[(i - 1 + F.length) % F.length], d = f.d || 0, h = f.hold || 0;
@@ -199,10 +234,12 @@
     const root = { eN: "shN", eF: "shF", kN: "hipN", kF: "hipF" };
     const endOf = { eN: "hN", eF: "hF", kN: "fN", kF: "fF" };
     Object.keys(root).forEach(key => {
-      const mid = J => { const a = v.sub(J[key], J[root[key]]), n = v.norm(v.sub(J[endOf[key]], J[root[key]])); return v.sub(a, v.mul(n, v.dot(a, n))); };
+      const mid = J => { const a = v.sub(J[key], J[root[key]]), n = v.norm(v.sub(J[endOf[key]], J[root[key]])); const m = v.sub(a, v.mul(n, v.dot(a, n))); return v.len(m) < 3 ? undefined : m; };
       pa[key] = mid(A); pb[key] = mid(B);
     });
     const base = lerp(pa, pb, k);
+    // Beugerichtungen über die Kugel drehen statt linear mischen: kein Durchgang durch null, kein Umklappen
+    Object.keys(root).forEach(key => { if (pa[key] && pb[key]) base[key] = slerp(pa[key], pb[key], k); });
     const mid = solve(base);
     // Hände und Füße schwingen in Bögen um Schulter und Hüfte, statt auf geraden Linien zu gleiten.
     // Was in beiden Posen an derselben Stelle bleibt (aufgestützt), bleibt dort.
