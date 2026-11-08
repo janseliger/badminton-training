@@ -11,7 +11,7 @@
 
   window.WORKOUT = w => start(w);
   const sc = document.createElement("script");
-  sc.src = "workouts/" + id + ".js?v=3";
+  sc.src = "workouts/" + id + ".js?v=4";
   sc.onerror = () => fail("Diese Einheit gibt es nicht.");
   document.head.appendChild(sc);
 
