@@ -8,7 +8,7 @@ window.FIGS = (function () {
   const tallKneel = (o = {}) => Object.assign({ P: [2, 45], t: 180, fN: [-36, 3], fF: [-36, 3], kN: [1, -.3, 0] }, o);
   const supine = (o = {}) => Object.assign({ P: [0, 9], t: -90 }, o);
   const plank = (o = {}) => Object.assign({ P: [0, 32], t: 112, hd: 8, hN: [50, 0], hF: [50, 0], fN: [-77, 0], fF: [-77, 0], kN: [0, -1, 0], eN: [-1, .1, .5], eF: [-1, .1, -.5] }, o);
-  const lunge = (o = {}) => Object.assign({ P: [0, 24], t: 116, fN: [42, 0], fF: [-58, 2], kN: [1, .3, 0], kF: [1, -1, 0] }, o);
+  const lunge = (o = {}) => Object.assign({ P: [0, 24], t: 116, fN: [42, 0], fF: [-76, 3], kN: [1, .3, 0], kF: [1, -1, 0] }, o);
   const sideLie = (o = {}) => Object.assign({ P: [0, 17], t: 90, roll: -90, hd: 0,
     fN: [-38, 14, 40], fF: [-38, 3, 40], kN: [0, 0, 1], hN: [52, 8, 46], hF: [52, 2, 46], eN: [0, 0, 1], eF: [0, 0, 1] }, o);
 
@@ -51,11 +51,11 @@ window.FIGS = (function () {
       { d: 1.3, hold: .9, p: lunge({ tw: -75, hd: -28, hN: { at: "shN", w: [-4, 50, 8] }, hF: [36, 0, -14] }) }
     ]},
 
-    bws: { trail: ["eN", "eF"], cam: { yaw: -30, pitch: 18 }, frames: [
-      { d: 1, hold: .3, p: tallKneel({ hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) },
-      { d: 1.3, hold: .7, p: tallKneel({ tw: 55, lat: -18, t: 172, hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) },
-      { d: 1, hold: .3, p: tallKneel({ hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) },
-      { d: 1.3, hold: .7, p: tallKneel({ tw: -55, lat: 18, t: 172, hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) }
+    bws: { trail: ["eN", "eF"], cam: { yaw: -30, pitch: 20 }, frames: [
+      { d: 1, hold: .4, p: { P: [0, 11], t: 180, fN: [22, 2, -12], fF: [24, 2, 12], kN: [.3, .3, 1], kF: [.3, .3, -1], hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } } },
+      { d: 1.3, hold: .8, p: { P: [0, 11], t: 180, fN: [22, 2, -12], fF: [24, 2, 12], kN: [.3, .3, 1], kF: [.3, .3, -1], hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] }, tw: 55, lat: -20 } },
+      { d: 1, hold: .4, p: { P: [0, 11], t: 180, fN: [22, 2, -12], fF: [24, 2, 12], kN: [.3, .3, 1], kF: [.3, .3, -1], hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } } },
+      { d: 1.3, hold: .8, p: { P: [0, 11], t: 180, fN: [22, 2, -12], fF: [24, 2, 12], kN: [.3, .3, 1], kF: [.3, .3, -1], hN: { at: "head", d: [-6, 0, 11] }, hF: { at: "head", d: [-6, 0, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] }, tw: -55, lat: 20 } }
     ]},
 
     "situp-drehung": { cam: { yaw: -28, pitch: 18 }, frames: [
@@ -65,29 +65,29 @@ window.FIGS = (function () {
 
     "vsit-einbeinig": { trail: [], cam: { yaw: -30, pitch: 18 }, frames: [
       { d: .9, hold: .4, p: supine({ kN: [-.6, 1, 0], kF: [-.6, 1, 0], fN: [80, 4], fF: [80, 4], hN: [2, 2, 18], hF: [0, 2, -18] }) },
-      { d: 1, hold: .6, p: supine({ kN: [-.6, 1, 0], kF: [-.6, 1, 0], t: -140, hd: 18, fN: [44, 72], fF: [80, 4], hN: [38, 58, 13], hF: [38, 58, 6], eN: [0, -1, 0] }) },
+      { d: 1, hold: .6, p: supine({ kN: [-.6, 1, 0], kF: [-.6, 1, 0], t: -135, hd: 18, fN: [14, 88], fF: [80, 4], hN: [9, 62, 13], hF: [9, 62, 6], eN: [0, -1, 0] }) },
       { d: .9, hold: .4, p: supine({ kN: [-.6, 1, 0], kF: [-.6, 1, 0], fN: [80, 4], fF: [80, 4], hN: [2, 2, 18], hF: [0, 2, -18] }) },
-      { d: 1, hold: .6, p: supine({ kN: [-.6, 1, 0], kF: [-.6, 1, 0], t: -140, hd: 18, fN: [80, 4], fF: [44, 72], hN: [38, 58, -6], hF: [38, 58, -13], eN: [0, -1, 0] }) }
+      { d: 1, hold: .6, p: supine({ kN: [-.6, 1, 0], kF: [-.6, 1, 0], t: -135, hd: 18, fN: [80, 4], fF: [14, 88], hN: [9, 62, -6], hF: [9, 62, -13], eN: [0, -1, 0] }) }
     ]},
 
     "hollow-rocks": { trail: ["fN", "head"], mark: "lowback", cam: { yaw: -26, pitch: 14 }, frames: [
-      { d: .8, hold: 0, p: { P: [0, 8], t: -116, hd: 10, fN: [80, 15], fF: [80, 15], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } },
-      { d: .8, hold: 0, p: { P: [0, 8], t: -100, hd: 10, fN: [75, 35], fF: [75, 35], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } }
+      { d: .8, hold: 0, p: { P: [0, 8], t: -128, hd: 10, fN: [80, 10], fF: [80, 10], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } },
+      { d: .8, hold: 0, p: { P: [0, 8], t: -102, hd: 10, fN: [70, 44], fF: [70, 44], hN: { at: "shN", d: [0, 50, 0] }, hF: { at: "shF", d: [0, 50, 0] }, eN: up } }
     ]},
 
     fahrrad: { trail: ["kN", "kF"], cam: { yaw: -26, pitch: 22 }, frames: [
-      { d: .8, hold: .2, p: supine({ t: -114, tw: 42, hd: 14, fN: [16, 32], fF: [74, 18], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) },
-      { d: .8, hold: .2, p: supine({ t: -114, tw: -42, hd: 14, fN: [74, 18], fF: [16, 32], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) }
+      { d: .8, hold: .2, p: supine({ t: -136, tw: 42, hd: 14, fN: [16, 32], fF: [74, 18], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) },
+      { d: .8, hold: .2, p: supine({ t: -136, tw: -42, hd: 14, fN: [74, 18], fF: [16, 32], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) }
     ]},
 
     "knie-anziehen": { cam: { yaw: -26, pitch: 14 }, frames: [
-      { d: .9, hold: .2, p: { P: [0, 10], t: 200, hN: [-26, 1, 28], hF: [-26, 1, -28], fN: [24, 24], fF: [24, 24], kN: up } },
-      { d: .9, hold: .2, p: { P: [0, 10], t: 208, hN: [-26, 1, 28], hF: [-26, 1, -28], fN: [74, 26], fF: [74, 26], kN: up } }
+      { d: .9, hold: .2, p: { P: [0, 10], t: 205, hN: { at: "S", d: [12, -12, -6] }, hF: { at: "S", d: [12, -12, 6] }, fN: [22, 26], fF: [22, 26], kN: [0, 1, 0] } },
+      { d: .9, hold: .2, p: { P: [0, 10], t: 212, hN: { at: "S", d: [12, -12, -6] }, hF: { at: "S", d: [12, -12, 6] }, fN: [76, 20], fF: [76, 20], kN: [0, 1, 0] } }
     ]},
 
     "russian-twist": { trail: ["hN"], cam: { yaw: -40, pitch: 30 }, frames: [
-      { d: .9, hold: .3, p: { P: [0, 10], t: 216, tw: 55, fN: [34, 4], fF: [34, 4], kN: up, hN: [12, 8, 30], hF: [12, 8, 26] } },
-      { d: .9, hold: .3, p: { P: [0, 10], t: 216, tw: -55, fN: [34, 4], fF: [34, 4], kN: up, hN: [12, 8, -26], hF: [12, 8, -30] } }
+      { d: .9, hold: .3, p: { P: [0, 10], t: 220, tw: 50, fN: [36, 3], fF: [36, 3], kN: [0, 1, 0], hN: { at: "S", d: [26, -16, 3] }, hF: { at: "S", d: [26, -16, -3] } } },
+      { d: .9, hold: .3, p: { P: [0, 10], t: 220, tw: -50, fN: [36, 3], fF: [36, 3], kN: [0, 1, 0], hN: { at: "S", d: [26, -16, 3] }, hF: { at: "S", d: [26, -16, -3] } } }
     ]},
 
     "flutter-kicks": { trail: [], mark: "lowback", cam: { yaw: -24, pitch: 14 }, frames: [
@@ -184,7 +184,7 @@ window.FIGS = (function () {
   "Inneren Arm zur Decke aufdrehen"
  ],
  "bws": [
-  "Mitte",
+  "Schneidersitz, Hände am Kopf",
   "Drehen, Ellbogen nach hinten unten",
   "Mitte",
   "Zur anderen Seite drehen"
@@ -195,7 +195,7 @@ window.FIGS = (function () {
  ],
  "vsit-einbeinig": [
   "Ablegen",
-  "Bein hoch, Hände zum Bein",
+  "Bein senkrecht hoch, Hände zum Bein",
   "Ablegen",
   "Anderes Bein"
  ],
@@ -208,11 +208,11 @@ window.FIGS = (function () {
   "Seite wechseln"
  ],
  "knie-anziehen": [
-  "Knie zur Brust",
-  "Beine strecken"
+  "Knie zur Brust, Arme vor der Brust",
+  "Beine strecken, Füße bleiben in der Luft"
  ],
  "russian-twist": [
-  "Zu einer Seite drehen",
+  "Hände vor der Brust, zu einer Seite drehen",
   "Zur anderen Seite drehen"
  ],
  "flutter-kicks": [
