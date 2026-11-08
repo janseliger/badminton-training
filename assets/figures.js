@@ -143,3 +143,217 @@ window.FIGS = (function () {
     ]}
   };
 })();
+
+/* Beschriftungen pro Bewegungsphase und zusätzliche Blickwinkel */
+(function (F) {
+  const caps = {
+ "fersensitz": [
+  "Auf die Fersen setzen, ruhig atmen",
+  "Hüfte nach vorn strecken"
+ ],
+ "sprunggelenk": [
+  "Zurück",
+  "Knie über die Zehen schieben"
+ ],
+ "9090-haende": [
+  "Mitte",
+  "Knie zur einen Seite ablegen",
+  "Mitte",
+  "Knie zur anderen Seite ablegen"
+ ],
+ "9090-frei": [
+  "Mitte",
+  "Knie zur einen Seite ablegen",
+  "Mitte",
+  "Knie zur anderen Seite ablegen"
+ ],
+ "9090-streck": [
+  "Knie zur Seite ablegen",
+  "Hüfte hoch in den Kniestand",
+  "Wieder absetzen",
+  "Knie zur anderen Seite",
+  "Hüfte hoch in den Kniestand",
+  "Wieder absetzen"
+ ],
+ "ausfall-rotation": [
+  "Hände neben den vorderen Fuß",
+  "Arm zur Decke aufdrehen"
+ ],
+ "bws": [
+  "Mitte",
+  "Drehen, Ellbogen nach hinten unten",
+  "Mitte",
+  "Zur anderen Seite drehen"
+ ],
+ "situp-drehung": [
+  "Ablegen, Arm zur Decke",
+  "Hochkommen und drehen"
+ ],
+ "vsit-einbeinig": [
+  "Ablegen",
+  "Bein hoch, Hände zum Bein",
+  "Ablegen",
+  "Anderes Bein"
+ ],
+ "hollow-rocks": [
+  "Körper fest, nach hinten schaukeln",
+  "Nach vorn schaukeln"
+ ],
+ "fahrrad": [
+  "Ellbogen zum anderen Knie",
+  "Seite wechseln"
+ ],
+ "knie-anziehen": [
+  "Knie zur Brust",
+  "Beine strecken"
+ ],
+ "russian-twist": [
+  "Zur einen Seite drehen",
+  "Zur anderen Seite drehen"
+ ],
+ "flutter-kicks": [
+  "Beine im Wechsel heben",
+  "Rücken bleibt am Boden"
+ ],
+ "schulterklopfen": [
+  "Stütz halten",
+  "Hand zur anderen Schulter",
+  "Stütz halten",
+  "Andere Hand"
+ ],
+ "huefte-einbeinig": [
+  "Ablegen",
+  "Hüfte hoch, Knie bleibt an der Brust"
+ ],
+ "das-t": [
+  "Arme seitlich ablegen",
+  "Arme heben, Daumen nach oben"
+ ],
+ "mountain-climber": [
+  "Stütz",
+  "Knie langsam zur Brust",
+  "Stütz",
+  "Anderes Knie"
+ ],
+ "hueftbeuger": [
+  "Aufrecht knien",
+  "Hüfte nach vorn sinken lassen"
+ ],
+ "open-book": [
+  "Seitlage, Arme vorn",
+  "Arm nach oben öffnen",
+  "Brust zeigt zur Decke",
+  "Zurück nach vorn"
+ ],
+ "grosse-kreise": [
+  "Großer Kreis mit der Hand",
+  "Großer Kreis mit der Hand",
+  "Großer Kreis mit der Hand",
+  "Großer Kreis mit der Hand",
+  "Großer Kreis mit der Hand",
+  "Großer Kreis mit der Hand",
+  "Großer Kreis mit der Hand",
+  "Großer Kreis mit der Hand"
+ ]
+};
+  const views = {
+ "open-book": [
+  {
+   "yaw": 58,
+   "pitch": 24,
+   "label": "Schräg"
+  },
+  {
+   "yaw": 0,
+   "pitch": 86,
+   "label": "Von oben"
+  }
+ ],
+ "grosse-kreise": [
+  {
+   "yaw": 58,
+   "pitch": 24,
+   "label": "Schräg"
+  },
+  {
+   "yaw": 0,
+   "pitch": 86,
+   "label": "Von oben"
+  }
+ ],
+ "russian-twist": [
+  {
+   "yaw": -40,
+   "pitch": 30,
+   "label": "Schräg"
+  },
+  {
+   "yaw": 0,
+   "pitch": 86,
+   "label": "Von oben"
+  }
+ ],
+ "fersensitz": [
+  {
+   "yaw": -2,
+   "pitch": 6,
+   "label": "Von der Seite"
+  },
+  {
+   "yaw": -60,
+   "pitch": 16,
+   "label": "Schräg vorn"
+  }
+ ],
+ "9090-haende": [
+  {
+   "yaw": -78,
+   "pitch": 26,
+   "label": "Von vorn"
+  },
+  {
+   "yaw": 0,
+   "pitch": 86,
+   "label": "Von oben"
+  }
+ ],
+ "9090-frei": [
+  {
+   "yaw": -78,
+   "pitch": 26,
+   "label": "Von vorn"
+  },
+  {
+   "yaw": 0,
+   "pitch": 86,
+   "label": "Von oben"
+  }
+ ],
+ "9090-streck": [
+  {
+   "yaw": -78,
+   "pitch": 24,
+   "label": "Von vorn"
+  },
+  {
+   "yaw": -2,
+   "pitch": 6,
+   "label": "Von der Seite"
+  }
+ ],
+ "das-t": [
+  {
+   "yaw": -82,
+   "pitch": 30,
+   "label": "Vom Kopf aus"
+  },
+  {
+   "yaw": -2,
+   "pitch": 6,
+   "label": "Von der Seite"
+  }
+ ]
+};
+  Object.keys(caps).forEach(k => F[k] && F[k].frames.forEach((f, i) => { if (caps[k][i]) f.cap = caps[k][i]; }));
+  Object.keys(views).forEach(k => { if (F[k]) F[k].views = views[k]; });
+})(window.FIGS);

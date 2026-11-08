@@ -139,8 +139,8 @@
   }
 
   /* Projektion */
-  function camera(anim) {
-    const c = anim.cam || {}, ya = R(c.yaw ?? -28), pi = R(c.pitch ?? 14);
+  function camera(c) {
+    c = c || {}; const ya = R(c.yaw ?? -28), pi = R(c.pitch ?? 14);
     return p => {
       const x = p[0] * Math.cos(ya) + p[2] * Math.sin(ya);
       const z = -p[0] * Math.sin(ya) + p[2] * Math.cos(ya);
@@ -148,15 +148,16 @@
     };
   }
   const MAT = [[-90, 0, -32], [90, 0, -32], [90, 0, 32], [-90, 0, 32]];
-  function bounds(anim) {
-    if (anim._b) return anim._b;
-    const pr = camera(anim); let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  function bounds(anim, cam, vi) {
+    anim._b = anim._b || {};
+    if (anim._b[vi]) return anim._b[vi];
+    const pr = camera(cam); let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     const T = total(anim), pts = [];
     for (let i = 0; i < 40; i++) { const J = jointsAt(anim, T * i / 40); ["P", "S", "head", "hN", "hF", "fN", "fF", "kN", "kF", "eN", "eF"].forEach(k => pts.push(J[k])); }
     pts.forEach(p => { const q = pr(p); x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); });
     y1 += L.head + 4; y0 -= 6; x0 -= 14; x1 += 14;
     MAT.forEach(p => { const q = pr(p); y0 = Math.min(y0, q[1]); });
-    return (anim._b = [x0, y0, x1, y1]);
+    return (anim._b[vi] = [x0, y0, x1, y1]);
   }
 
   const css = (n, el, d) => (getComputedStyle(el).getPropertyValue(n).trim() || d);
@@ -181,16 +182,14 @@
     return (anim._tr = list.filter(x => x.size > 8));
   }
 
-  function draw(ctx, w, h, anim, t, el) {
-    const pr = camera(anim), b = bounds(anim);
+  function drawView(ctx, w, h, anim, t, el, cam, vi) {
+    const pr = camera(cam), b = bounds(anim, cam, vi);
     const s = Math.min(w / (b[2] - b[0]), h / (b[3] - b[1])) * 0.94;
     const ox = w / 2 - (b[0] + b[2]) / 2 * s, oy = h / 2 + (b[1] + b[3]) / 2 * s;
     const X = p => { const q = pr(p); return [ox + q[0] * s, oy - q[1] * s, q[2]]; };
     const ink = css("--fig-ink", el, "#16211b"), far = css("--fig-far", el, "#9aa8a0"), mat = css("--fig-mat", el, "#d3dcd5"),
           acc = css("--fig-acc", el, "#1c6a49"), mark = css("--fig-mark", el, "#b9770f"), bg = css("--fig-bg", el, "transparent"),
           chest = css("--fig-chest", el, "#8eaabd"), halo = css("--fig-halo", el, "#ffffff"), contact = css("--fig-contact", el, "rgba(22,33,27,.45)");
-    ctx.clearRect(0, 0, w, h);
-    if (bg !== "transparent") { ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h); }
     const path = (pts, close) => { ctx.beginPath(); pts.forEach((p, i) => { const q = X(p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); if (close) ctx.closePath(); };
     // Matte
     ctx.fillStyle = mat; path(MAT, true); ctx.fill();
@@ -268,6 +267,44 @@
       const q = X(J[anim.mark]), ph = (t % 1.2) / 1.2;
       ctx.strokeStyle = mark; ctx.globalAlpha = 1 - ph * .7; ctx.lineWidth = 3 * s;
       ctx.beginPath(); ctx.arc(q[0], q[1], (9 + ph * 9) * s, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+  }
+
+  /* Beschriftung der aktuellen Bewegungsphase */
+  function capAt(anim, t) {
+    const F = anim.frames, T = total(anim); t = ((t % T) + T) % T;
+    for (let i = 0; i < F.length; i++) { const f = F[i], d = (f.d || 0) + (f.hold || 0); if (t < d) return f.cap || ""; t -= d; }
+    return "";
+  }
+
+  function draw(ctx, w, h, anim, t, el) {
+    const bg = css("--fig-bg", el, "transparent");
+    ctx.clearRect(0, 0, w, h);
+    if (bg !== "transparent") { ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h); }
+    const views = anim.views || [anim.cam || {}];
+    const hasCap = anim.frames.some(f => f.cap);
+    const top = hasCap ? Math.round(h * .15) : 0, H = h - top;
+    const side = views.length > 1 && w > H * 1.15;
+    const ink = css("--fig-ink", el, "#16211b"), muted = css("--fig-muted", el, "#5a6a61"), line = css("--fig-mat", el, "#d3dcd5");
+    views.forEach((cam, i) => {
+      const vw = side ? w / views.length : w, vh = side ? H : H / views.length;
+      const x0 = side ? i * vw : 0, y0 = top + (side ? 0 : i * vh);
+      ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, vw, vh); ctx.clip(); ctx.translate(x0, y0);
+      drawView(ctx, vw, vh, anim, t, el, cam, i);
+      if (views.length > 1 && cam.label) {
+        ctx.font = `600 ${Math.round(Math.max(11, h * .05))}px Barlow, system-ui, sans-serif`;
+        ctx.fillStyle = muted; ctx.textBaseline = "top"; ctx.fillText(cam.label, Math.round(h * .025), Math.round(h * .02));
+      }
+      ctx.restore();
+      if (i > 0) { ctx.strokeStyle = line; ctx.lineWidth = Math.max(1, h * .006); ctx.beginPath(); if (side) { ctx.moveTo(x0, y0 + vh * .08); ctx.lineTo(x0, y0 + vh * .92); } else { ctx.moveTo(w * .06, y0); ctx.lineTo(w * .94, y0); } ctx.stroke(); }
+    });
+    if (hasCap) {
+      const c = capAt(anim, t);
+      if (c) {
+        ctx.font = `700 ${Math.round(Math.max(14, top * .62))}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+        ctx.fillStyle = ink; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(c, w / 2, top * .56); ctx.textAlign = "start";
+      }
     }
   }
 
