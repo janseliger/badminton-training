@@ -161,53 +161,104 @@
 
   const css = (n, el, d) => (getComputedStyle(el).getPropertyValue(n).trim() || d);
 
+  /* Bewegungsbahn: das Gelenk, das sich am meisten bewegt (oder anim.trail) */
+  const TRAIL_KEYS = ["hN", "hF", "fN", "fF", "kN", "kF", "head"];
+  function trailOf(anim) {
+    if (anim._tr) return anim._tr;
+    const T = total(anim), n = 72, samples = [];
+    for (let i = 0; i <= n; i++) samples.push(jointsAt(anim, T * i / n));
+    const pick = keys => keys.map(k => {
+      const pts = samples.map(J => J[k]);
+      const ext = [0, 1, 2].map(i => Math.max(...pts.map(p => p[i])) - Math.min(...pts.map(p => p[i])));
+      return { k, pts, size: Math.hypot(ext[0], ext[1], ext[2]) };
+    }).sort((x, y) => y.size - x.size);
+    const list = anim.trail ? pick([].concat(anim.trail)) : pick(TRAIL_KEYS).slice(0, 1);
+    return (anim._tr = list.filter(x => x.size > 8));
+  }
+
   function draw(ctx, w, h, anim, t, el) {
     const pr = camera(anim), b = bounds(anim);
     const s = Math.min(w / (b[2] - b[0]), h / (b[3] - b[1])) * 0.94;
     const ox = w / 2 - (b[0] + b[2]) / 2 * s, oy = h / 2 + (b[1] + b[3]) / 2 * s;
     const X = p => { const q = pr(p); return [ox + q[0] * s, oy - q[1] * s, q[2]]; };
     const ink = css("--fig-ink", el, "#16211b"), far = css("--fig-far", el, "#9aa8a0"), mat = css("--fig-mat", el, "#d3dcd5"),
-          acc = css("--fig-acc", el, "#1c6a49"), mark = css("--fig-mark", el, "#b9770f"), bg = css("--fig-bg", el, "transparent");
+          acc = css("--fig-acc", el, "#1c6a49"), mark = css("--fig-mark", el, "#b9770f"), bg = css("--fig-bg", el, "transparent"),
+          chest = css("--fig-chest", el, "#8eaabd"), halo = css("--fig-halo", el, "#ffffff"), contact = css("--fig-contact", el, "rgba(22,33,27,.45)");
     ctx.clearRect(0, 0, w, h);
     if (bg !== "transparent") { ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h); }
+    const path = (pts, close) => { ctx.beginPath(); pts.forEach((p, i) => { const q = X(p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); if (close) ctx.closePath(); };
     // Matte
-    ctx.fillStyle = mat; ctx.beginPath(); MAT.forEach((p, i) => { const q = X(p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = mat; path(MAT, true); ctx.fill();
     const J = jointsAt(anim, t);
-    // Schatten
-    ctx.fillStyle = "rgba(0,0,0,.10)"; ctx.beginPath();
-    for (let i = 0; i <= 24; i++) { const a = i / 24 * Math.PI * 2; const q = X([J.P[0] + 6 + Math.cos(a) * 42, 0, J.P[2] + Math.sin(a) * 16]); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
-    ctx.fill();
-    // Teile nach Tiefe sortiert zeichnen
+
+    // Füße: gestreckt, wenn das Schienbein flach liegt, sonst flach nach vorn
+    const foot = side => {
+      const k = J["k" + side], a = J["f" + side], d = v.norm(v.sub(a, k));
+      const dir = Math.abs(d[1]) < .5 ? d : [1, 0, 0];
+      let toe = v.add(a, v.mul(dir, 12)); if (toe[1] < 1.5) toe = [toe[0], 1.5, toe[2]];
+      return toe;
+    };
+    J.toeN = foot("N"); J.toeF = foot("F");
+
+    // Bodenkontakte: worauf der Körper ruht
+    const touch = [];
+    ["fN", "fF", "toeN", "toeF", "kN", "kF", "hN", "hF"].forEach(k => { if (J[k][1] < 6) touch.push(J[k]); });
+    if (J.P[1] < 15) touch.push(J.P);
+    if (J.S[1] < 15) touch.push(J.S);
+    if (J.head[1] < 14) touch.push(J.head);
+    ctx.fillStyle = contact;
+    touch.forEach(p => { path(Array.from({ length: 17 }, (_, i) => { const a = i / 16 * Math.PI * 2; return [p[0] + Math.cos(a) * 7, 0, p[2] + Math.sin(a) * 7]; }), true); ctx.fill(); });
+
+    // Bewegungsbahn
+    trailOf(anim).forEach(tr => {
+      ctx.save(); ctx.strokeStyle = mark; ctx.globalAlpha = .6; ctx.lineWidth = 2.2 * s; ctx.setLineDash([2.5 * s, 4.5 * s]); ctx.lineCap = "round";
+      path(tr.pts); ctx.stroke(); ctx.restore();
+    });
+
+    // Teile nach Tiefe sortiert, jeweils mit hellem Rand, damit sich Kreuzungen trennen
     const parts = [];
-    const seg = (pts, col, wd) => parts.push({ z: pts.reduce((a, p) => a + X(p)[2], 0) / pts.length, fn: () => {
-      ctx.strokeStyle = col; ctx.lineWidth = wd * s; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.beginPath();
-      pts.forEach((p, i) => { const q = X(p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.stroke(); } });
-    const chest = css("--fig-chest", el, "#8eaabd");
-    seg([J.hipF, J.kF, J.fF], far, 7.5);
-    seg([J.shF, J.eF, J.hF], far, 6);
-    seg([J.hipN, J.kN, J.fN], acc, 7.5);
-    seg([J.shN, J.eN, J.hN], acc, 6);
-    // Rumpf in zwei Teilen: Brust oben, Bauch unten. Zur Kamera zeigende Vorderseite hell, Rücken dunkel.
+    const limb = (pts, col, w1, w2, end) => parts.push({ z: pts.reduce((a, p) => a + X(p)[2], 0) / pts.length, fn: () => {
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+      const q = pts.map(X);
+      const stroke = (c, extra) => {
+        ctx.strokeStyle = c;
+        ctx.lineWidth = (w1 + extra) * s; ctx.beginPath(); ctx.moveTo(q[0][0], q[0][1]); ctx.lineTo(q[1][0], q[1][1]); ctx.stroke();
+        ctx.lineWidth = (w2 + extra) * s; ctx.beginPath(); ctx.moveTo(q[1][0], q[1][1]); ctx.lineTo(q[2][0], q[2][1]); if (q[3]) ctx.lineTo(q[3][0], q[3][1]); ctx.stroke();
+        if (end) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(q[2][0], q[2][1], (end + extra / 2) * s, 0, Math.PI * 2); ctx.fill(); }
+      };
+      stroke(halo, 3); stroke(col, 0);
+    } });
+    limb([J.hipF, J.kF, J.fF, J.toeF], far, 9, 7, 0);
+    limb([J.shF, J.eF, J.hF], far, 6.5, 5.5, 3.6);
+    limb([J.hipN, J.kN, J.fN, J.toeN], acc, 9, 7, 0);
+    limb([J.shN, J.eN, J.hN], acc, 6.5, 5.5, 3.6);
+
+    // Rumpf: Brust oben, Bauch unten; Vorderseite hell, Rücken dunkel
     const facing = n => { const a = pr([0, 0, 0]), b = pr(n); return b[2] - a[2]; };
     const mid = (a, b) => v.add(a, v.mul(v.sub(b, a), .5));
     const mN = mid(J.shN, J.hipN), mF = mid(J.shF, J.hipF);
-    const quad = (pts, n) => parts.push({ z: pts.reduce((a, p) => a + X(p)[2], 0) / 4, fn: () => {
-      const q = pts.map(X), col = facing(n) > -0.12 ? chest : ink;
-      ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 8 * s; ctx.lineJoin = "round";
-      ctx.beginPath(); q.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill(); ctx.stroke();
+    const torsoZ = [J.shN, J.shF, J.hipF, J.hipN].reduce((a, p) => a + X(p)[2], 0) / 4 - .5;
+    parts.push({ z: torsoZ, fn: () => {
+      ctx.lineJoin = "round";
+      path([J.shN, J.shF, J.hipF, J.hipN], true); ctx.strokeStyle = halo; ctx.lineWidth = 11 * s; ctx.stroke();
+      const quad = (pts, n) => { const col = facing(n) > -0.12 ? chest : ink; path(pts, true); ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 8 * s; ctx.fill(); ctx.stroke(); };
+      // die vom Betrachter abgewandte Hälfte zuerst
+      const up = [[J.shN, J.shF, mF, mN], J.f], low = [[mN, mF, J.hipF, J.hipN], J.fLow];
+      const zz = q => q[0].reduce((a, p) => a + X(p)[2], 0);
+      (zz(up) < zz(low) ? [up, low] : [low, up]).forEach(q => quad(q[0], q[1]));
     } });
-    quad([J.shN, J.shF, mF, mN], J.f);
-    quad([mN, mF, J.hipF, J.hipN], J.fLow);
     // Kopf mit Nase in Blickrichtung
     parts.push({ z: X(J.head)[2], fn: () => {
-      const q = X(J.head), n = X(J.S); ctx.strokeStyle = ink; ctx.lineWidth = 6 * s; ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(n[0], n[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+      const q = X(J.head), n = X(J.S); ctx.lineCap = "round";
+      ctx.strokeStyle = ink; ctx.lineWidth = 6 * s; ctx.beginPath(); ctx.moveTo(n[0], n[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(q[0], q[1], (L.head + 1.5) * s, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(q[0], q[1], L.head * s, 0, Math.PI * 2); ctx.fill();
       const nz = X(v.add(J.head, v.mul(v.norm(v.cross(J.hu, v.cross(J.f, J.hu))), L.head + 2)));
       ctx.fillStyle = chest; ctx.beginPath(); ctx.arc(nz[0], nz[1], 3.6 * s, 0, Math.PI * 2); ctx.fill();
     } });
     parts.sort((a, b) => a.z - b.z).forEach(p => p.fn());
-    // Markierung der Fokus-Stelle
+
+    // Fokus-Stelle
     if (anim.mark && J[anim.mark]) {
       const q = X(J[anim.mark]), ph = (t % 1.2) / 1.2;
       ctx.strokeStyle = mark; ctx.globalAlpha = 1 - ph * .7; ctx.lineWidth = 3 * s;
