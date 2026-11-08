@@ -328,4 +328,6 @@
   };
   window.FIGURE_DRAW = (canvas, anim, t) => draw(canvas.getContext("2d"), canvas.width, canvas.height, anim, t, canvas);
   window.FIGURE_TOTAL = total;
+  window.FIGURE_JOINTS = jointsAt;
+  window.FIGURE_CAP = capAt;
 })();

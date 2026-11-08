@@ -23,7 +23,7 @@ window.FIGS = (function () {
       { d: 1.2, hold: .9, p: { P: [22, 42], t: 174, fN: [36, 0], fF: [-40, 3], kN: [1, .1, 0], kF: [.3, -1, 0], hN: { at: "S", w: [26, -48, 10] }, hF: { at: "S", w: [26, -48, 2] } } }
     ]},
 
-    "9090-haende": { trail: ["kN", "kF"], cam: { yaw: -78, pitch: 26 }, frames: [
+    "9090-haende": { cam3d: { yaw: -55, pitch: 26 }, trail: ["kN", "kF"], cam: { yaw: -78, pitch: 26 }, frames: [
       { d: 1.0, hold: .2, p: { P: [0, 11], t: 194, hN: [-30, 1, 18], hF: [-30, 1, -18], fN: [32, 0, 26], fF: [32, 0, -26], kN: [0, 1, 0] } },
       { d: 1.0, hold: .5, p: { P: [0, 11], t: 194, hN: [-30, 1, 18], hF: [-30, 1, -18], fN: [32, 0, 26], fF: [32, 0, -26], kN: [0, -.7, 1] } },
       { d: 1.0, hold: .2, p: { P: [0, 11], t: 194, hN: [-30, 1, 18], hF: [-30, 1, -18], fN: [32, 0, 26], fF: [32, 0, -26], kN: [0, 1, 0] } },
@@ -124,14 +124,14 @@ window.FIGS = (function () {
       { d: 1.6, hold: 1.2, p: { P: [10, 22], t: 176, fN: [42, 0], fF: [-52, 2], kN: [1, .3, 0], kF: [1, -1, 0], hN: { at: "hipN", w: [2, 4, 6] }, hF: { at: "hipF", w: [2, 4, -6] }, eN: [-1, 0, .4], eF: [-1, 0, -.4] } }
     ]},
 
-    "open-book": { trail: "hN", cam: { yaw: 58, pitch: 24 }, frames: [
+    "open-book": { cam3d: { yaw: -15, pitch: 42 }, trail: "hN", cam: { yaw: 58, pitch: 24 }, frames: [
       { d: 1, hold: .6, p: sideLie() },
       { d: 1.1, hold: 0, p: sideLie({ tw: -45, hd: -20, hN: { at: "S", w: [2, 64, 0] } }) },
       { d: 1.1, hold: 1, p: sideLie({ tw: -85, hd: -40, hN: [52, 14, -46] }) },
       { d: 1.1, hold: 0, p: sideLie({ tw: -45, hd: -20, hN: { at: "S", w: [2, 64, 0] } }) }
     ]},
 
-    "grosse-kreise": { trail: "hN", cam: { yaw: 58, pitch: 24 }, frames: [
+    "grosse-kreise": { cam3d: { yaw: -15, pitch: 42 }, trail: "hN", cam: { yaw: 58, pitch: 24 }, frames: [
       { d: .55, hold: 0, p: sideLie({ tw: 0, hN: { at: "S", w: [0, 14, 42] } }) },
       { d: .55, hold: 0, p: sideLie({ tw: -13, hN: { at: "S", w: [33, 22, 30] } }) },
       { d: .55, hold: 0, p: sideLie({ tw: -45, hN: { at: "S", w: [46, 30, 0] } }) },
