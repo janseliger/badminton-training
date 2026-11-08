@@ -273,7 +273,12 @@
   /* Beschriftung der aktuellen Bewegungsphase */
   function capAt(anim, t) {
     const F = anim.frames, T = total(anim); t = ((t % T) + T) % T;
-    for (let i = 0; i < F.length; i++) { const f = F[i], d = (f.d || 0) + (f.hold || 0); if (t < d) return f.cap || ""; t -= d; }
+    // Während der ersten Hälfte eines Übergangs gilt noch die Beschriftung der vorigen Phase
+    for (let i = 0; i < F.length; i++) {
+      const f = F[i], d = f.d || 0, h = f.hold || 0;
+      if (t < d + h) return (t < d / 2 ? F[(i - 1 + F.length) % F.length].cap : f.cap) || "";
+      t -= d + h;
+    }
     return "";
   }
 

@@ -7,7 +7,7 @@ window.FIGS = (function () {
   /* gemeinsame Ausgangsposen */
   const tallKneel = (o = {}) => Object.assign({ P: [2, 45], t: 180, fN: [-36, 3], fF: [-36, 3], kN: [1, -.3, 0] }, o);
   const supine = (o = {}) => Object.assign({ P: [0, 9], t: -90 }, o);
-  const plank = (o = {}) => Object.assign({ P: [0, 40], t: 101, hd: 8, hN: [50, 0], hF: [50, 0], fN: [-70, 0], fF: [-70, 0], kN: [1, -.6, 0] }, o);
+  const plank = (o = {}) => Object.assign({ P: [0, 30], t: 112, hd: 8, hN: [50, 0], hF: [50, 0], fN: [-70, 0], fF: [-70, 0], kN: [1, -.6, 0] }, o);
   const lunge = (o = {}) => Object.assign({ P: [0, 24], t: 116, fN: [42, 0], fF: [-58, 2], kN: [1, .3, 0], kF: [1, -1, 0] }, o);
   const sideLie = (o = {}) => Object.assign({ P: [0, 17], t: 90, roll: -90, hd: 0,
     fN: [-38, 14, 40], fF: [-38, 3, 40], kN: [0, 0, 1], hN: [52, 8, 46], hF: [52, 2, 46], eN: [0, 0, 1], eF: [0, 0, 1] }, o);
@@ -60,7 +60,7 @@ window.FIGS = (function () {
 
     "situp-drehung": { cam: { yaw: -28, pitch: 18 }, frames: [
       { d: 1, hold: .3, p: supine({ fN: [32, 0], fF: [32, 0], kN: up, hN: { at: "shN", w: [0, 50, 0] }, hF: [-4, 2, -18] }) },
-      { d: 1.1, hold: .5, p: supine({ t: -205, tw: -35, fN: [32, 0], fF: [32, 0], kN: up, hN: { at: "shN", w: [0, 50, 0] }, hF: { at: "S", w: [24, -24, -8] } }) }
+      { d: 1.1, hold: .5, p: supine({ t: -205, tw: -60, fN: [32, 0], fF: [32, 0], kN: up, hN: { at: "shN", w: [0, 50, 0] }, hF: { at: "S", w: [24, -24, -8] } }) }
     ]},
 
     "vsit-einbeinig": { trail: [], cam: { yaw: -30, pitch: 18 }, frames: [
@@ -76,8 +76,8 @@ window.FIGS = (function () {
     ]},
 
     fahrrad: { trail: ["kN", "kF"], cam: { yaw: -26, pitch: 22 }, frames: [
-      { d: .8, hold: .2, p: supine({ t: -128, tw: 30, hd: 10, fN: [16, 32], fF: [74, 18], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) },
-      { d: .8, hold: .2, p: supine({ t: -128, tw: -30, hd: 10, fN: [74, 18], fF: [16, 32], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) }
+      { d: .8, hold: .2, p: supine({ t: -114, tw: 42, hd: 14, fN: [16, 32], fF: [74, 18], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) },
+      { d: .8, hold: .2, p: supine({ t: -114, tw: -42, hd: 14, fN: [74, 18], fF: [16, 32], kN: up, hN: { at: "head", d: [-4, -2, 11] }, hF: { at: "head", d: [-4, -2, -11] }, eN: { l: [0, 0, 1] }, eF: { l: [0, 0, -1] } }) }
     ]},
 
     "knie-anziehen": { cam: { yaw: -26, pitch: 14 }, frames: [
@@ -90,19 +90,19 @@ window.FIGS = (function () {
       { d: .9, hold: .3, p: { P: [0, 10], t: 216, tw: -55, fN: [34, 4], fF: [34, 4], kN: up, hN: [12, 8, -26], hF: [12, 8, -30] } }
     ]},
 
-    "flutter-kicks": { trail: ["fN", "fF"], mark: "lowback", cam: { yaw: -24, pitch: 14 }, frames: [
+    "flutter-kicks": { trail: [], mark: "lowback", cam: { yaw: -24, pitch: 14 }, frames: [
       { d: .45, hold: 0, p: supine({ P: [0, 8], hN: [6, 2, 12], hF: [6, 2, -12], fN: [76, 26], fF: [79, 8] }) },
       { d: .45, hold: 0, p: supine({ P: [0, 8], hN: [6, 2, 12], hF: [6, 2, -12], fN: [79, 8], fF: [76, 26] }) }
     ]},
 
-    schulterklopfen: { trail: ["hN", "hF"], mark: "P", cam: { yaw: -40, pitch: 22 }, frames: [
+    schulterklopfen: { trail: [], mark: "P", cam: { yaw: -40, pitch: 22 }, frames: [
       { d: .7, hold: .3, p: plank({ fN: [-70, 0, 18], fF: [-70, 0, -18] }) },
       { d: .7, hold: .5, p: plank({ fN: [-70, 0, 18], fF: [-70, 0, -18], hN: { at: "shF", d: [-7, -3, 0] }, eN: { l: [-.6, -1, .3] } }) },
       { d: .7, hold: .3, p: plank({ fN: [-70, 0, 18], fF: [-70, 0, -18] }) },
       { d: .7, hold: .5, p: plank({ fN: [-70, 0, 18], fF: [-70, 0, -18], hF: { at: "shN", d: [-7, -3, 0] }, eF: { l: [-.6, -1, -.3] } }) }
     ]},
 
-    "huefte-einbeinig": { mark: "P", cam: { yaw: -26, pitch: 16 }, frames: [
+    "huefte-einbeinig": { trail: [], mark: "P", cam: { yaw: -26, pitch: 16 }, frames: [
       { d: .9, hold: .5, p: supine({ P: [0, 8], hN: [2, 2, 16], hF: [0, 2, -16], fN: [26, 0], kN: up, fF: { at: "hipF", w: [16, 20, 0] }, kF: [-1, 1.2, 0] }) },
       { d: 1, hold: 1, p: supine({ P: [0, 33], t: -62, hd: -14, hN: [-4, 2, 16], hF: [-6, 2, -16], eN: up, fN: [26, 0], kN: up, fF: { at: "hipF", w: [16, 20, 0] }, kF: [-1, 1.2, 0] }) }
     ]},
@@ -114,9 +114,9 @@ window.FIGS = (function () {
 
     "mountain-climber": { trail: ["kN", "kF"], cam: { yaw: -26, pitch: 14 }, frames: [
       { d: .3, hold: .2, p: plank() },
-      { d: .9, hold: .4, p: plank({ P: [-3, 42], t: 100, fN: [-12, 20] }) },
+      { d: .9, hold: .4, p: plank({ P: [-3, 33], t: 110, fN: [-14, 18] }) },
       { d: .9, hold: .2, p: plank() },
-      { d: .9, hold: .4, p: plank({ P: [-3, 42], t: 100, fF: [-12, 20], kF: [1, -.6, 0] }) }
+      { d: .9, hold: .4, p: plank({ P: [-3, 33], t: 110, fF: [-14, 18], kF: [1, -.6, 0] }) }
     ]},
 
     "hueftbeuger": { trail: "P", mark: "hipF", cam: { yaw: -16, pitch: 10 }, frames: [
@@ -157,13 +157,13 @@ window.FIGS = (function () {
  ],
  "9090-haende": [
   "Mitte",
-  "Knie zur einen Seite ablegen",
+  "Knie zu einer Seite ablegen",
   "Mitte",
   "Knie zur anderen Seite ablegen"
  ],
  "9090-frei": [
   "Mitte",
-  "Knie zur einen Seite ablegen",
+  "Knie zu einer Seite ablegen",
   "Mitte",
   "Knie zur anderen Seite ablegen"
  ],
@@ -187,7 +187,7 @@ window.FIGS = (function () {
  ],
  "situp-drehung": [
   "Ablegen, Arm zur Decke",
-  "Hochkommen und drehen"
+  "Hochkommen, oben zur Seite drehen"
  ],
  "vsit-einbeinig": [
   "Ablegen",
@@ -196,8 +196,8 @@ window.FIGS = (function () {
   "Anderes Bein"
  ],
  "hollow-rocks": [
-  "Körper fest, nach hinten schaukeln",
-  "Nach vorn schaukeln"
+  "Körper fest, nach vorn schaukeln",
+  "Nach hinten schaukeln"
  ],
  "fahrrad": [
   "Ellbogen zum anderen Knie",
@@ -208,7 +208,7 @@ window.FIGS = (function () {
   "Beine strecken"
  ],
  "russian-twist": [
-  "Zur einen Seite drehen",
+  "Zu einer Seite drehen",
   "Zur anderen Seite drehen"
  ],
  "flutter-kicks": [
@@ -256,104 +256,7 @@ window.FIGS = (function () {
   "Großer Kreis mit der Hand"
  ]
 };
-  const views = {
- "open-book": [
-  {
-   "yaw": 58,
-   "pitch": 24,
-   "label": "Schräg"
-  },
-  {
-   "yaw": 0,
-   "pitch": 86,
-   "label": "Von oben"
-  }
- ],
- "grosse-kreise": [
-  {
-   "yaw": 58,
-   "pitch": 24,
-   "label": "Schräg"
-  },
-  {
-   "yaw": 0,
-   "pitch": 86,
-   "label": "Von oben"
-  }
- ],
- "russian-twist": [
-  {
-   "yaw": -40,
-   "pitch": 30,
-   "label": "Schräg"
-  },
-  {
-   "yaw": 0,
-   "pitch": 86,
-   "label": "Von oben"
-  }
- ],
- "fersensitz": [
-  {
-   "yaw": -2,
-   "pitch": 6,
-   "label": "Von der Seite"
-  },
-  {
-   "yaw": -60,
-   "pitch": 16,
-   "label": "Schräg vorn"
-  }
- ],
- "9090-haende": [
-  {
-   "yaw": -78,
-   "pitch": 26,
-   "label": "Von vorn"
-  },
-  {
-   "yaw": 0,
-   "pitch": 86,
-   "label": "Von oben"
-  }
- ],
- "9090-frei": [
-  {
-   "yaw": -78,
-   "pitch": 26,
-   "label": "Von vorn"
-  },
-  {
-   "yaw": 0,
-   "pitch": 86,
-   "label": "Von oben"
-  }
- ],
- "9090-streck": [
-  {
-   "yaw": -78,
-   "pitch": 24,
-   "label": "Von vorn"
-  },
-  {
-   "yaw": -2,
-   "pitch": 6,
-   "label": "Von der Seite"
-  }
- ],
- "das-t": [
-  {
-   "yaw": -82,
-   "pitch": 30,
-   "label": "Vom Kopf aus"
-  },
-  {
-   "yaw": -2,
-   "pitch": 6,
-   "label": "Von der Seite"
-  }
- ]
-};
+  const views = {"open-book": [{"yaw": 0, "pitch": 86}], "grosse-kreise": [{"yaw": 0, "pitch": 86}], "russian-twist": [{"yaw": -40, "pitch": 30, "label": "Schräg"}, {"yaw": 0, "pitch": 86, "label": "Von oben"}], "fersensitz": [{"yaw": -2, "pitch": 6}], "9090-haende": [{"yaw": -78, "pitch": 26}], "9090-frei": [{"yaw": -78, "pitch": 26}], "9090-streck": [{"yaw": -78, "pitch": 24}], "das-t": [{"yaw": -82, "pitch": 30, "label": "Vom Kopf aus"}, {"yaw": -2, "pitch": 6, "label": "Von der Seite"}]};
   Object.keys(caps).forEach(k => F[k] && F[k].frames.forEach((f, i) => { if (caps[k][i]) f.cap = caps[k][i]; }));
   Object.keys(views).forEach(k => { if (F[k]) F[k].views = views[k]; });
 })(window.FIGS);
