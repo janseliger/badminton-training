@@ -36,7 +36,8 @@
 
   function ik(root, target, l1, l2, pole) {
     let d = v.sub(target, root), dist = v.len(d);
-    const dmax = l1 + l2 - 0.05, dmin = Math.abs(l1 - l2) + 0.05;
+    // Gelenke nie ganz durchgestreckt: wirkt natürlicher
+    const dmax = (l1 + l2) * 0.975, dmin = Math.abs(l1 - l2) + 0.05;
     dist = Math.max(dmin, Math.min(dmax, dist));
     const n = v.norm(d);
     let q = v.sub(pole, v.mul(n, v.dot(pole, n)));
@@ -74,7 +75,12 @@
     const loc = d => v.add(v.add(v.mul(f, d[0]), v.mul(u, d[1])), v.mul(s, d[2]));
     const tgt = (x, side, kind) => {
       if (!x) {
-        if (kind === "h") return v.add(J[side === 1 ? "shN" : "shF"], v.mul(u, -(L.ua + L.fa - 6)));
+        if (kind === "h") {
+          // freie Arme folgen der Schwerkraft: im Stand hängend, im Liegen neben dem Körper
+          const sh = J[side === 1 ? "shN" : "shF"];
+          if (u[1] > .5) { const h = v.add(sh, [4, -(L.ua + L.fa - 5), side * 3]); h[1] = Math.max(3, h[1]); return h; }
+          const h = v.add(sh, v.mul(u, -(L.ua + L.fa - 8))); h[1] = Math.max(3, Math.min(h[1], sh[1])); return v.add(h, v.mul(s, side * 4));
+        }
         return null;
       }
       if (Array.isArray(x)) return x.length === 3 ? x : [x[0], x[1], side * (kind === "h" ? L.shW / 2 : L.hipW / 2)];
@@ -112,30 +118,53 @@
     }
     return k < .5 ? a : b;
   }
-  const ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  const ease = k => -(Math.cos(Math.PI * Math.max(0, Math.min(1, k))) - 1) / 2;
   const total = a => a.frames.reduce((s, f) => s + (f.d || 0) + (f.hold || 0), 0);
   // Gelenkpositionen interpolieren statt Posen: stabiler bei Zielen in verschiedenen Formaten
   function jointsAt(anim, t) {
     const F = anim.frames; t = ((t % total(anim)) + total(anim)) % total(anim);
     for (let i = 0; i < F.length; i++) {
       const f = F[i], prev = F[(i - 1 + F.length) % F.length], d = f.d || 0, h = f.hold || 0;
-      if (t < d) return blendPose(prev.p, f.p, ease(t / d));
+      if (t < d) return blendPose(prev.p, f.p, t / d);
       t -= d; if (t < h) return solve(f.p); t -= h;
     }
     return solve(F[F.length - 1].p);
   }
-  function blendPose(p, q, k) {
-    // Ziele, die relativ angegeben sind, erst in Weltkoordinaten auflösen
+  // Kugelförmige Interpolation zweier Richtungen
+  function slerp(a, b, k) {
+    const A = v.norm(a), B = v.norm(b), d = Math.max(-1, Math.min(1, v.dot(A, B))), w = Math.acos(d);
+    if (w < 1e-3) return v.norm(v.add(v.mul(A, 1 - k), v.mul(B, k)));
+    if (Math.PI - w < 1e-3) return v.norm(v.add(v.mul(A, 1 - k), v.mul(B, k + .001)));
+    const s1 = Math.sin((1 - k) * w) / Math.sin(w), s2 = Math.sin(k * w) / Math.sin(w);
+    return v.add(v.mul(A, s1), v.mul(B, s2));
+  }
+  function blendPose(p, q, r) {
+    const k = ease(r);
+    // Hände und Füße setzen leicht verzögert ein und holen auf: natürliches Nachschwingen
+    const kd = ease((r - .08) / .92);
     const A = solve(p), B = solve(q);
     const flat = (pp, J) => Object.assign({}, pp, { hN: J.hN, hF: J.hF, fN: J.fN, fF: J.fF, P: J.P });
     const pa = flat(p, A), pb = flat(q, B);
     // Beugerichtungen als tatsächliche Richtung Gelenk minus Ansatz übernehmen
     const root = { eN: "shN", eF: "shF", kN: "hipN", kF: "hipF" };
+    const endOf = { eN: "hN", eF: "hF", kN: "fN", kF: "fF" };
     Object.keys(root).forEach(key => {
-      const mid = (J, key) => v.sub(v.sub(J[key], J[root[key]]), v.mul(v.norm(v.sub(J[key[0] === "e" ? "h" + key[1] : "f" + key[1]], J[root[key]])), v.dot(v.sub(J[key], J[root[key]]), v.norm(v.sub(J[key[0] === "e" ? "h" + key[1] : "f" + key[1]], J[root[key]])))));
-      pa[key] = mid(A, key); pb[key] = mid(B, key);
+      const mid = J => { const a = v.sub(J[key], J[root[key]]), n = v.norm(v.sub(J[endOf[key]], J[root[key]])); return v.sub(a, v.mul(n, v.dot(a, n))); };
+      pa[key] = mid(A); pb[key] = mid(B);
     });
-    return solve(lerp(pa, pb, k));
+    const base = lerp(pa, pb, k);
+    const mid = solve(base);
+    // Hände und Füße schwingen in Bögen um Schulter und Hüfte, statt auf geraden Linien zu gleiten.
+    // Was in beiden Posen an derselben Stelle bleibt (aufgestützt), bleibt dort.
+    const ends = { hN: "shN", hF: "shF", fN: "hipN", fF: "hipF" };
+    Object.keys(ends).forEach(e => {
+      const rt = ends[e];
+      if (v.len(v.sub(A[e], B[e])) < 3) { base[e] = v.add(A[e], v.mul(v.sub(B[e], A[e]), k)); return; }
+      const ra = v.sub(A[e], A[rt]), rb = v.sub(B[e], B[rt]);
+      const dir = slerp(ra, rb, kd), len = v.len(ra) + (v.len(rb) - v.len(ra)) * kd;
+      base[e] = v.add(mid[rt], v.mul(dir, len));
+    });
+    return solve(base);
   }
 
   /* Projektion */

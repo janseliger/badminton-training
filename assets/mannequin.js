@@ -110,6 +110,7 @@
     const nrm = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return mul(a, 1 / l); };
     const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 
+    let breath = 0;
     function pose(J) {
       // Füße: gestreckt, wenn das Schienbein flach liegt, sonst flach nach vorn
       const toe = (k, f) => { const d = nrm(sub(J[f], J[k])); const dir = Math.abs(d[1]) < .5 ? d : [1, 0, 0]; const t = addv(J[f], mul(dir, 12)); t[1] = Math.max(t[1], 2.2); return t; };
@@ -121,7 +122,8 @@
       const sAx = nrm(sub(J.shN, J.shF)), pAx = nrm(sub(J.hipN, J.hipF));
       // Brustkorb
       const chestC = lerp(J.S, J.P, .28);
-      parts.chest.set(chestC, sAx, J.u, J.f, 17.5, 19, 10.5);
+      const br = 1 + .03 * Math.sin(breath);
+      parts.chest.set(chestC, sAx, J.u, J.f, 17.5 * (1 + .01 * Math.sin(breath)), 19, 10.5 * br);
       // Becken
       const pelC = lerp(J.P, J.S, .02);
       parts.pelvis.set(pelC, pAx, J.u, J.fLow, 14.5, 10, 9.5);
@@ -197,6 +199,7 @@
       if (anim && r.width > 0) {
         const t = fixed !== null ? fixed : reduce ? .6 : (now - t0) / 1000 * speed;
         const J = FIGURE_JOINTS(anim, t);
+        breath = t * 2 * Math.PI / 3.6;
         pose(J);
         if (anim.mark && J[anim.mark]) {
           ring.visible = true; ring.position.copy(V(J[anim.mark])); ring.lookAt(camera.position);
