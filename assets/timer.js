@@ -52,7 +52,7 @@
 
     $("meta").textContent = `${W.subtitle ? W.subtitle + " · " : ""}${Math.round(TOTAL / 60)} Min.`;
     $("src").innerHTML = "Videos: " + Object.values(VID).map(v => `<a href="https://youtu.be/${esc(v.id)}" target="_blank" rel="noopener">${esc(v.name)}</a>`).join(" · ") +
-      ". Der Player zeigt nur den Abschnitt, in dem die Übung vorgemacht wird.";
+      ". Der Player zeigt nur den Abschnitt, in dem die Übung vorgemacht wird. Tipp: Seite ein, zwei Minuten vor dem Start öffnen, dann ist die YouTube-Werbung vor den Videos schon durch.";
 
     /* Ablauf-Liste */
     const box = $("planList");
@@ -90,28 +90,55 @@
     async function lock() { try { wl = await navigator.wakeLock?.request("screen"); } catch (e) {} }
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && running) lock(); });
 
-    /* Videoausschnitt: nur der Abschnitt mit der Übung, stumm in Schleife */
-    let yt = null, ytOk = false, curV = null;
+    /* Videoausschnitte: ein Player pro Video, alle schon beim Öffnen geladen.
+       So läuft YouTube-Werbung vor dem Training im Hintergrund und nicht in den Pausen.
+       Jeder Player wiederholt stumm seinen Abschnitt; sichtbar ist nur der aktive. */
+    const firstSeg = {};
+    TL.forEach(e => { if (e.s && !firstSeg[e.s.v.k]) firstSeg[e.s.v.k] = e.s.v; });
+    const P = {};          // k -> { yt, seg, ok, box }
+    let ytOk = false, curV = null;
     window.onYouTubeIframeAPIReady = () => {
-      yt = new YT.Player("ytp", {
-        host: "https://www.youtube-nocookie.com", width: "100%", height: "100%",
-        playerVars: { rel: 0, playsinline: 1, modestbranding: 1, mute: 1, controls: 1, iv_load_policy: 3 },
-        events: {
-          onReady: () => { ytOk = true; $("player").hidden = false; curV = null; render(); },
-          onStateChange: ev => { if (ev.data === 0 && curV) { yt.seekTo(curV.t, true); yt.playVideo(); } }
-        }
+      Object.keys(firstSeg).forEach(k => {
+        const box = document.createElement("div"); box.className = "yp";
+        const inner = document.createElement("div"); box.appendChild(inner);
+        $("player").appendChild(box);
+        const rec = P[k] = { seg: firstSeg[k], ok: false, box };
+        rec.yt = new YT.Player(inner, {
+          host: "https://www.youtube-nocookie.com", width: "100%", height: "100%", videoId: VID[k].id,
+          playerVars: { rel: 0, playsinline: 1, modestbranding: 1, mute: 1, autoplay: 1, controls: 1, iv_load_policy: 3, start: firstSeg[k].t },
+          events: {
+            onReady: ev => {
+              rec.ok = true; ev.target.mute(); ev.target.playVideo();
+              if (!ytOk) { ytOk = true; $("player").hidden = false; render(); }
+              else if (curV && curV.k === k) show(curV);
+            },
+            onStateChange: ev => { if (ev.data === 0) { ev.target.seekTo(rec.seg.t, true); ev.target.playVideo(); } }
+          }
+        });
       });
     };
     const ys = document.createElement("script"); ys.src = "https://www.youtube.com/iframe_api"; ys.async = true; document.head.appendChild(ys);
+    function show(x) {
+      const rec = P[x.k];
+      Object.values(P).forEach(r => r.box.classList.toggle("on", r === rec));
+      if (!rec || !rec.ok) return;
+      rec.seg = x;
+      try { rec.yt.mute(); rec.yt.seekTo(x.t, true); rec.yt.playVideo(); } catch (e) {}
+    }
     function cue(x) {
       if (!ytOk) return;
       if (curV && curV.k === x.k && curV.t === x.t) return;
-      curV = x;
-      try { yt.mute(); yt.loadVideoById({ videoId: VID[x.k].id, startSeconds: x.t, endSeconds: segEnd(x) }); } catch (e) {}
+      curV = x; show(x);
     }
     setInterval(() => {
-      if (!ytOk || !curV) return;
-      try { const t = yt.getCurrentTime(); if (t > segEnd(curV) - .3 || t < curV.t - 2) { yt.seekTo(curV.t, true); yt.playVideo(); } } catch (e) {}
+      Object.values(P).forEach(r => {
+        if (!r.ok) return;
+        try {
+          const st = r.yt.getPlayerState(), t = r.yt.getCurrentTime();
+          if (st === 1 && (t > segEnd(r.seg) - .3 || t < r.seg.t - 2)) r.yt.seekTo(r.seg.t, true);
+          if (st === 2 || st === 5) r.yt.playVideo();
+        } catch (e) {}
+      });
     }, 500);
 
     /* Zustand */
@@ -126,7 +153,7 @@
         $("lead").textContent = "Gut gemacht"; $("name").textContent = "Einheit beendet"; $("dose").textContent = `${Math.round(TOTAL / 60)} Minuten`;
         $("explain").hidden = true; $("num").textContent = "✓"; $("ringsub").textContent = "";
         $("play").textContent = "Start"; running = false;
-        try { yt && yt.pauseVideo(); } catch (err) {}
+        Object.values(P).forEach(r => { try { r.ok && r.yt.pauseVideo(); } catch (err) {} });
         markPlan(); update(); return;
       }
       $("explain").hidden = false;
@@ -190,8 +217,7 @@
         last = performance.now();
         try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch (e) {}
         lock();
-        try { ytOk && yt.playVideo(); } catch (e) {}
-        if (idx === 0 && rem === TL[0].dur) say("Als Nächstes: " + TL[0].s.n);
+                if (idx === 0 && rem === TL[0].dur) say("Als Nächstes: " + TL[0].s.n);
       } else { try { wl?.release(); wl = null; } catch (e) {} }
     }
     $("play").addEventListener("click", toggle);
