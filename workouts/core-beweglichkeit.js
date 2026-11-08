@@ -62,7 +62,7 @@ WORKOUT({
         focus: "Rücken flach auf den Boden drücken.", light: "Hände unter das Gesäß, Beine höher halten." }
     ]},
     { name: "Stabilität im Stütz", prep: 30, work: 30, steps: [
-      { n: "Stütz mit Schulterklopfen", dose: "30 Sek.", v: { k: "LEG", t: 216, e: 270 },
+      { n: "Stütz mit Schulterklopfen", dose: "30 Sek.", v: { k: "LEG", t: 224, e: 272 },
         how: "Liegestützposition. Abwechselnd mit einer Hand die gegenüberliegende Schulter antippen.",
         focus: "Hüfte bleibt ruhig und dreht nicht mit.", light: "Auf den Knien." },
       { n: "Einbeinige Hüftbrücke", dose: "15 Sek. je Seite", sw: 15, v: { k: "LEG", t: 158, e: 216 },
