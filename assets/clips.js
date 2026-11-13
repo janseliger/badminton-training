@@ -5,23 +5,14 @@
 window.CLIPS = {
   "9090-frei": "clips/9090-frei.mp4",
   "9090-haende": "clips/9090-haende.mp4",
-  "9090-streck": "clips/9090-streck.mp4",
   "ausfall-rotation": "clips/ausfall-rotation.mp4",
   "ausfall-tief": "clips/ausfall-tief.mp4",
-  "bws": "clips/bws.mp4",
   "das-t": "clips/das-t.mp4",
   "fahrrad": "clips/fahrrad.mp4",
-  "fersensitz": "clips/fersensitz.mp4",
-  "flutter-kicks": "clips/flutter-kicks.mp4",
-  "grosse-kreise": "clips/grosse-kreise.mp4",
   "hollow-rocks": "clips/hollow-rocks.mp4",
   "huefte-einbeinig": "clips/huefte-einbeinig.mp4",
   "knie-anziehen": "clips/knie-anziehen.mp4",
-  "liegestuetz": "clips/liegestuetz.mp4",
-  "mountain-climber": "clips/mountain-climber.mp4",
-  "open-book": "clips/open-book.mp4",
   "russian-twist": "clips/russian-twist.mp4",
   "situp-drehung": "clips/situp-drehung.mp4",
-  "sprunggelenk": "clips/sprunggelenk.mp4",
   "vsit-einbeinig": "clips/vsit-einbeinig.mp4"
 };
