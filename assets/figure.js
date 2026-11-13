@@ -37,7 +37,7 @@
   function ik(root, target, l1, l2, pole) {
     let d = v.sub(target, root), dist = v.len(d);
     // Gelenke nie ganz durchgestreckt: wirkt natürlicher
-    const dmax = (l1 + l2) * 0.975, dmin = Math.abs(l1 - l2) + 0.05;
+    const dmax = (l1 + l2) * 0.992, dmin = Math.abs(l1 - l2) + 0.05;
     dist = Math.max(dmin, Math.min(dmax, dist));
     const n = v.norm(d);
     let q = v.sub(pole, v.mul(n, v.dot(pole, n)));
@@ -47,6 +47,28 @@
     const joint = v.add(root, v.add(v.mul(n, l1 * Math.cos(a)), v.mul(q, l1 * Math.sin(a))));
     const end = v.add(joint, v.mul(v.norm(v.sub(v.add(root, v.mul(n, dist)), joint)), l2));
     return { joint, end };
+  }
+
+  /* Mittelgelenk (Knie/Ellbogen) um die Achse Wurzel–Ende drehen, bis es nicht im Boden steckt */
+  function liftJoint(R0, E, H, minY) {
+    if (E[1] >= minY) return E;
+    const ax = v.norm(v.sub(H, R0)), c = v.add(R0, v.mul(ax, v.dot(v.sub(E, R0), ax)));
+    const q0 = v.sub(E, c), r = v.len(q0); if (r < .5) return E;
+    const q = v.mul(q0, 1 / r), w = v.cross(ax, q);
+    let best = E, by = E[1];
+    for (let i = 1; i <= 90; i++) {
+      for (const sg of [1, -1]) {
+        const a = sg * i * Math.PI / 90, P2 = v.add(c, v.add(v.mul(q, r * Math.cos(a)), v.mul(w, r * Math.sin(a))));
+        if (P2[1] >= minY) return P2;
+        if (P2[1] > by) { by = P2[1]; best = P2; }
+      }
+    }
+    return best;
+  }
+  // Knie und Ellbogen liegen höchstens auf, stecken aber nie im Boden; Knochenlängen bleiben erhalten
+  function floorFix(J) {
+    [["hipN", "kN", "fN", 4.5], ["hipF", "kF", "fF", 4.5], ["shN", "eN", "hN", 3.5], ["shF", "eF", "hF", 3.5]]
+      .forEach(([r, j, e, m]) => { J[j] = liftJoint(J[r], J[j], J[e], m); });
   }
 
   function solve(p) {
@@ -149,7 +171,8 @@
     // Beine nur gegen Brustkorb und Kopf prüfen (der Oberschenkel setzt am Becken an)
     fixLimb("hipN", "kN", "fN", L.th, L.sh, 1, [vols[0], vols[3]], v.mul(s, 1), pole(p.kN, defK));
     fixLimb("hipF", "kF", "fF", L.th, L.sh, -1, [vols[0], vols[3]], v.mul(s, -1), pole(p.kF, p.kN ? pole(p.kN) : defK));
-    ["eN", "hN", "eF", "hF", "kN", "fN", "kF", "fF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
+    ["hN", "hF", "fN", "fF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
+    floorFix(J);
     // Blickrichtung (Brust) und Bauchrichtung für die Darstellung
     let sl = v.sub(ax, v.mul(u, v.dot(ax, u))); sl = v.len(sl) < 1e-3 ? s : v.norm(sl);
     J.f = f; J.fLow = v.norm(v.cross(u, sl)); J.u = u; J.hu = hu;
@@ -198,6 +221,7 @@
       const fix = (r, j, e, l1, l2) => { const pol = v.sub(J[j], v.add(J[r], v.mul(v.norm(v.sub(J[e], J[r])), v.dot(v.sub(J[j], J[r]), v.norm(v.sub(J[e], J[r])))))); const res = ik(J[r], J[e], l1, l2, v.len(pol) > .01 ? pol : J.f); J[j] = res.joint; J[e] = res.end; };
       fix("shN", "eN", "hN", L.ua, L.fa); fix("shF", "eF", "hF", L.ua, L.fa);
       fix("hipN", "kN", "fN", L.th, L.sh); fix("hipF", "kF", "fF", L.th, L.sh);
+      floorFix(J);
       return J;
     });
     return (anim._cache = { T, n, out, keys });
