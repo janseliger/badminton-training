@@ -117,13 +117,15 @@
     // Ellbogen zeigen von sich aus leicht nach hinten und außen (wie bei einem echten Arm)
     const defEN = v.norm(v.add(v.add(v.mul(f, -.6), v.mul(s, .7)), v.mul(u, -.2)));
     const defEF = v.norm(v.add(v.add(v.mul(f, -.6), v.mul(s, -.7)), v.mul(u, -.2)));
-    const aN = ik(J.shN, tgt(p.hN, 1, "h"), L.ua, L.fa, pole(p.eN, defEN));
-    const aF = ik(J.shF, tgt(p.hF, -1, "h"), L.ua, L.fa, pole(p.eF, p.eN ? pole(p.eN) : defEF));
+    // Beine zuerst, damit Hände sich auf Knie oder Füße beziehen können (z. B. { at: "kN" })
     const fN = tgt(p.fN, 1, "f") || v.add(J.hipN, v.mul(u, -80));
     const fF = tgt(p.fF, -1, "f") || v.add(J.hipF, v.mul(u, -80));
     const lN = ik(J.hipN, fN, L.th, L.sh, pole(p.kN, defK));
     const lF = ik(J.hipF, fF, L.th, L.sh, pole(p.kF, p.kN ? pole(p.kN) : defK));
-    Object.assign(J, { eN: aN.joint, hN: aN.end, eF: aF.joint, hF: aF.end, kN: lN.joint, fN: lN.end, kF: lF.joint, fF: lF.end });
+    Object.assign(J, { kN: lN.joint, fN: lN.end, kF: lF.joint, fF: lF.end });
+    const aN = ik(J.shN, tgt(p.hN, 1, "h"), L.ua, L.fa, pole(p.eN, defEN));
+    const aF = ik(J.shF, tgt(p.hF, -1, "h"), L.ua, L.fa, pole(p.eF, p.eN ? pole(p.eN) : defEF));
+    Object.assign(J, { eN: aN.joint, hN: aN.end, eF: aF.joint, hF: aF.end });
 
     /* Keine Überschneidung mit dem Körper: Volumen von Brustkorb, Taille, Becken und Kopf (plus Gliedmaßendicke) */
     const chestC = v.add(S, v.mul(v.sub(P, S), .28)), waistC = v.add(P, v.mul(v.sub(S, P), .36));
