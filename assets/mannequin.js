@@ -260,7 +260,7 @@
       }
       center.set((lo[0] + hi[0]) / 2, Math.max(18, (lo[1] + hi[1]) / 2), (lo[2] + hi[2]) / 2);
       const size = Math.max(hi[0] - lo[0], hi[1] - lo[1] + 20, hi[2] - lo[2]);
-      dist = size * 2.35 + 70;
+      dist = (size * 2.35 + 70) / (anim.zoom || 1);
       const c = anim.cam3d || (anim.views && anim.views[0]) || anim.cam || {};
       yaw = (c.yaw ?? -28) * Math.PI / 180; pitch = Math.max(.12, Math.min(1.35, (c.pitch ?? 14) * Math.PI / 180 + .12));
       // Bewegungsbahn

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=22">
+<link rel="stylesheet" href="assets/style.css?v=23">
 </head>
 <body>
 <div class="wrap">
@@ -47,7 +47,7 @@
           <button type="button" id="mFig" aria-pressed="true">Figur</button>
           <button type="button" id="mVid" aria-pressed="false">Video</button>
         </div>
-        <div class="figbox" id="figbox"><canvas id="figc" aria-label="Animierte Figur zur Übung"></canvas></div>
+        <div class="figbox" id="figbox"><canvas id="figc" aria-label="Animierte Figur zur Übung"></canvas><video id="clipv" muted playsinline loop autoplay preload="auto" hidden aria-label="Videoclip zur Übung"></video></div>
         <div class="player" id="player" hidden></div>
         <a class="vid" id="vid" href="#" target="_blank" rel="noopener">
           <span class="play" aria-hidden="true"></span>
@@ -77,8 +77,9 @@
     </aside>
   </div>
 </div>
-<script src="assets/figure.js?v=22"></script>
-<script src="assets/figures.js?v=22"></script>
-<script src="assets/timer.js?v=22"></script>
+<script src="assets/figure.js?v=23"></script>
+<script src="assets/figures.js?v=23"></script>
+<script src="assets/clips.js?v=23"></script>
+<script src="assets/timer.js?v=23"></script>
 </body>
 </html>

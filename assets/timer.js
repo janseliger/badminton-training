@@ -11,7 +11,7 @@
 
   window.WORKOUT = w => start(w);
   const sc = document.createElement("script");
-  sc.src = "workouts/" + id + ".js?v=22";
+  sc.src = "workouts/" + id + ".js?v=23";
   sc.onerror = () => fail("Diese Einheit gibt es nicht.");
   document.head.appendChild(sc);
 
@@ -186,7 +186,15 @@
       const showFig = hasFig && mode === "fig";
       $("figbox").hidden = !showFig; $("player").hidden = showFig || !ytOk;
       document.querySelector(".viewsw").hidden = !hasFig;
-      if (showFig) fig.set(FIGS[s.fig]);
+      // Gibt es zur Figur einen fertigen Videoclip (assets/clips.js), läuft der statt der Animation
+      const clip = showFig && window.CLIPS && CLIPS[s.fig];
+      const cv = $("clipv");
+      if (cv) {
+        cv.hidden = !clip; $("figc").hidden = !!clip;
+        if (clip) { if (cv.dataset.src !== clip) { cv.dataset.src = clip; cv.src = clip; } const pr = cv.play(); if (pr && pr.catch) pr.catch(() => {}); }
+        else { try { cv.pause(); } catch (err) {} }
+      }
+      if (showFig && !clip) fig.set(FIGS[s.fig]);
       if (!hasFig && mode === "fig") loadYT();
       const a = $("vid"); a.href = vurl(s.v); a.classList.toggle("small", isW || ytOk || showFig);
       $("vidt").textContent = (ytOk || showFig) ? "Auf YouTube öffnen" : (isW ? "Video" : "Video ansehen ab " + fmt(s.v.t));
