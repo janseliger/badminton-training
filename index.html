@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=20">
+<link rel="stylesheet" href="assets/style.css?v=21">
 </head>
 <body>
 <div class="wrap">
@@ -19,7 +19,7 @@
   <p class="intro">Einheiten zum Mitmachen mit Intervall-Timer. Zu jeder Übung läuft der Videoausschnitt, in dem sie vorgemacht wird.</p>
   <div class="list" id="list"></div>
 </div>
-<script src="workouts/list.js?v=20"></script>
+<script src="workouts/list.js?v=21"></script>
 <script>
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   document.getElementById("list").innerHTML = (window.WORKOUT_LIST || []).map(w =>

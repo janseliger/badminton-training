@@ -18,7 +18,7 @@
  * Animation: { frames:[{p, d, hold}], cam:{yaw,pitch}, mark:"lowback"|"P"|"S"|"fN"|"kN"|..., label }
  */
 (function () {
-  const L = { torso: 50, neck: 6, head: 9, ua: 27, fa: 25, th: 41, sh: 40, hipW: 20, shW: 36 };
+  const L = { torso: 48, neck: 7, head: 10, ua: 28.5, fa: 26, th: 42.5, sh: 41.5, hipW: 20, shW: 36 };
   const R = a => a * Math.PI / 180;
   const v = {
     add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
@@ -100,7 +100,7 @@
         if (kind === "h") {
           // freie Arme folgen der Schwerkraft: im Stand hängend, im Liegen neben dem Körper
           const sh = J[side === 1 ? "shN" : "shF"];
-          if (u[1] > .5) { const h = v.add(sh, [4, -(L.ua + L.fa - 5), side * 3]); h[1] = Math.max(3, h[1]); return h; }
+          if (u[1] > .5) { const h = v.add(sh, [2, -(L.ua + L.fa - 1.5), side * 4]); h[1] = Math.max(3, h[1]); return h; }
           const h = v.add(sh, v.mul(u, -(L.ua + L.fa - 8))); h[1] = Math.max(3, Math.min(h[1], sh[1])); return v.add(h, v.mul(s, side * 4));
         }
         return null;
@@ -171,13 +171,15 @@
     // Beine nur gegen Brustkorb und Kopf prüfen (der Oberschenkel setzt am Becken an)
     fixLimb("hipN", "kN", "fN", L.th, L.sh, 1, [vols[0], vols[3]], v.mul(s, 1), pole(p.kN, defK));
     fixLimb("hipF", "kF", "fF", L.th, L.sh, -1, [vols[0], vols[3]], v.mul(s, -1), pole(p.kF, p.kN ? pole(p.kN) : defK));
-    ["hN", "hF", "fN", "fF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
+    ["hN", "hF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
+    ["fN", "fF"].forEach(k => { if (J[k][1] < 3.2) J[k] = [J[k][0], 3.2, J[k][2]]; });
     floorFix(J);
     // Blickrichtung (Brust) und Bauchrichtung für die Darstellung
     let sl = v.sub(ax, v.mul(u, v.dot(ax, u))); sl = v.len(sl) < 1e-3 ? s : v.norm(sl);
     J.f = f; J.fLow = v.norm(v.cross(u, sl)); J.u = u; J.hu = hu;
     // Rundrücken (positiv) oder Hohlkreuz (negativ) als Zahl im ersten Feld, damit er mit geglättet wird
     J.curlV = [p.curl || 0, 0, 0];
+    J.tuckV = [p.tuck ? p.tuck[0] : 0, p.tuck ? p.tuck[1] : 0, 0];
     // Blickziel: ein Gelenk (z. B. die Hand, der man nachschaut) oder einfach geradeaus
     J.look = p.look && J[p.look] ? J[p.look] : v.add(J.head, v.mul(f, 60));
     return J;
@@ -202,6 +204,48 @@
   /* Vorberechnet und zeitlich geglättet: 60 Bilder pro Sekunde, sanfter Filter über ±5 Bilder,
      danach Knochenlängen wieder exakt herstellen. Entfernt jedes Zucken. */
   const FPS = 60;
+  /* Fuß: Richtung aus Schienbein und Kniebeuge; liegt auf dem Boden flach auf, in der Luft leicht gestreckt.
+     Ergebnis: Ferse, Zehenspitze und Fußrücken-Richtung */
+  const FOOT = { back: 4.5, front: 17.5, sole: 3.1 };
+  function footOf(J, side) {
+    const hip = J["hip" + side], k = J["k" + side], a = J["f" + side];
+    const sd = v.norm(v.sub(a, k));
+    const ln = v.norm(v.sub(a, hip)), kv = v.sub(k, hip), perp = v.sub(kv, v.mul(ln, v.dot(kv, ln)));
+    const body = J.fLow || J.f;
+    const w = Math.min(1, v.len(perp) / 7);
+    let ant = v.add(v.mul(body, 1 - w), v.mul(v.len(perp) > 1e-3 ? v.norm(perp) : body, w));
+    ant = v.sub(ant, v.mul(sd, v.dot(ant, sd)));
+    if (v.len(ant) < 1e-3) ant = v.sub(body, v.mul(sd, v.dot(body, sd)));
+    ant = v.norm(ant);
+    // Grundwinkel: belastet (Fuß unten, Schienbein steil) 90°, sonst locker gestreckt;
+    // "tuck" = Zehen aufgestellt wie im Liegestütz
+    const load = Math.max(0, Math.min(1, (10 - a[1]) / 4)) * Math.max(0, Math.min(1, (-sd[1] - .45) / .25));
+    const tuck = J.tuckV ? J.tuckV[side === "N" ? 0 : 1] : 0;
+    const high = Math.max(0, Math.min(1, (a[1] - 25) / 30));
+    const th0 = 52 - 16 * high + 38 * load + 66 * tuck;
+    const at = th => {
+      const r = R(th), fw = v.add(v.mul(sd, Math.cos(r)), v.mul(ant, Math.sin(r))), up = v.add(v.mul(sd, -Math.sin(r)), v.mul(ant, Math.cos(r)));
+      const heel = v.sub(a, v.mul(fw, FOOT.back)), toe = v.add(a, v.mul(fw, FOOT.front - 4 * tuck));
+      const lo = Math.min(heel[1], toe[1]) - FOOT.sole * Math.max(.3, up[1]);
+      return { fw, up, heel, toe, lo };
+    };
+    let best = at(th0);
+    if (best.lo < 0) {
+      let cand = null;
+      for (let i = 1; i <= 120; i++) {
+        for (const th of [th0 + i, th0 - i]) {
+          if (th < 0 || th > 130) continue;
+          const c = at(th); if (c.lo >= 0) { cand = c; break; }
+          if (!cand || c.lo > (cand.lo ?? -1e9)) { /* bester Notfall */ }
+        }
+        if (cand) break;
+      }
+      if (!cand) { let m = -1e9; for (let th = 0; th <= 130; th += 2) { const c = at(th); if (c.lo > m) { m = c.lo; cand = c; } } }
+      best = cand;
+    }
+    return best;
+  }
+
   function cacheOf(anim) {
     if (anim._cache) return anim._cache;
     const T = total(anim), n = Math.max(2, Math.round(T * FPS)), raw = [];
@@ -224,6 +268,12 @@
       floorFix(J);
       return J;
     });
+    // Füße pro Bild bestimmen und ebenfalls zeitlich glätten
+    const fk = ["toeN", "heelN", "ftopN", "toeF", "heelF", "ftopF"];
+    out.forEach(J => ["N", "F"].forEach(sd => { const ft = footOf(J, sd); J["toe" + sd] = ft.toe; J["heel" + sd] = ft.heel; J["ftop" + sd] = ft.up; }));
+    const sm = out.map((_, i) => { const o = {}; fk.forEach(k => { let acc = [0, 0, 0]; for (let j = -W; j <= W; j++) acc = v.add(acc, v.mul(out[(i + j + n) % n][k], wts[j + W] / ws)); o[k] = acc; }); return o; });
+    out.forEach((J, i) => fk.forEach(k => { J[k] = sm[i][k]; }));
+    keys.push(...fk);
     return (anim._cache = { T, n, out, keys });
   }
   function jointsAt(anim, t) {
@@ -259,7 +309,7 @@
     const flat = (pp, J) => Object.assign({}, pp, { hN: J.hN, hF: J.hF, fN: J.fN, fF: J.fF, P: J.P });
     // Fehlende Zahlenwerte (z. B. keine Drehung angegeben) mit ihrem Standard füllen, sonst würde
     // der Wert der anderen Pose bis zum Ende festgehalten und dann springen
-    const DEF = { t: 180, tw: 0, lat: 0, hd: 0, yaw: 0, roll: 0, curl: 0 };
+    const DEF = { t: 180, tw: 0, lat: 0, hd: 0, yaw: 0, roll: 0, curl: 0, tuck: [0, 0] };
     const pa = Object.assign({}, DEF, flat(p, A)), pb = Object.assign({}, DEF, flat(q, B));
     // Beugerichtungen als tatsächliche Richtung Gelenk minus Ansatz übernehmen
     const root = { eN: "shN", eF: "shF", kN: "hipN", kF: "hipF" };
@@ -350,13 +400,7 @@
     const J = jointsAt(anim, t);
 
     // Füße: gestreckt, wenn das Schienbein flach liegt, sonst flach nach vorn
-    const foot = side => {
-      const k = J["k" + side], a = J["f" + side], d = v.norm(v.sub(a, k));
-      const dir = Math.abs(d[1]) < .5 ? d : [1, 0, 0];
-      let toe = v.add(a, v.mul(dir, 12)); if (toe[1] < 1.5) toe = [toe[0], 1.5, toe[2]];
-      return toe;
-    };
-    J.toeN = foot("N"); J.toeF = foot("F");
+    // Füße kommen fertig aus der Vorberechnung (toeN/toeF)
 
     // Bodenkontakte: worauf der Körper ruht
     const touch = [];
