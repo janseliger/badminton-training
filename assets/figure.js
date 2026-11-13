@@ -131,46 +131,58 @@
       { c: chestC, r: [19.5, 23, 15] }, { c: waistC, r: [14, 14, 13] }, { c: P, r: [16.5, 12, 12.5] },
       { c: head, r: [12, 13, 12] }
     ];
+    // Kapseln (Ober- und Unterschenkel) für die Arme: Punkt auf der Achse, der am nächsten liegt
+    const axisPt = (pt, b) => { const ab = v.sub(b.b, b.a), t = Math.max(0, Math.min(1, v.dot(v.sub(pt, b.a), ab) / Math.max(v.dot(ab, ab), 1e-6))); return v.add(b.a, v.mul(ab, t)); };
+    // e < 1: innen; d: Richtung nach außen
+    const probe = (pt, b) => {
+      if (b.cap) { const c = axisPt(pt, b), d = v.sub(pt, c), l = v.len(d); return { e: (l / b.r) * (l / b.r), d, c, l }; }
+      const d = v.sub(pt, b.c), x = v.dot(d, s) / b.r[0], y = v.dot(d, u) / b.r[1], z = v.dot(d, f) / b.r[2];
+      return { e: x * x + y * y + z * z, d };
+    };
     const inside = (pt, list) => {
-      for (const b of list) {
-        const d = v.sub(pt, b.c), x = v.dot(d, s) / b.r[0], y = v.dot(d, u) / b.r[1], z = v.dot(d, f) / b.r[2];
-        const e = x * x + y * y + z * z;
-        if (e < 1) return { b, e, d };
-      }
+      for (const b of list) { const h = probe(pt, b); if (h.e < 1) return Object.assign(h, { b }); }
       return null;
     };
     const pushOut = (pt, list) => {
       let q = pt;
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         const hit = inside(q, list); if (!hit) break;
+        if (hit.b.cap) { const d = hit.l < .3 ? s : v.norm(hit.d); q = v.add(hit.c, v.mul(d, hit.b.r * 1.02)); continue; }
         const k = 1 / Math.sqrt(Math.max(hit.e, 1e-4)) + .02;
         let d = hit.d; if (v.len(d) < .5) d = v.mul(s, 1);
         q = v.add(hit.b.c, v.mul(d, k));
       }
       return q;
     };
-    // stufenlos: wie tief ein Punkt im Körper steckt (0 = außen, 1 = in der Mitte)
-    const depth = (pt, list) => { let m = 0; for (const b of list) { const d = v.sub(pt, b.c), x = v.dot(d, s) / b.r[0], y = v.dot(d, u) / b.r[1], z = v.dot(d, f) / b.r[2]; m = Math.max(m, 1 - Math.sqrt(x * x + y * y + z * z)); } return m; };
+    // stufenlos: wie tief ein Punkt im Körper steckt (0 = außen, 1 = in der Mitte), dazu die Richtung nach außen
+    const depthDir = (pt, list) => {
+      let m = 0, dir = null;
+      for (const b of list) { const h = probe(pt, b), dd = 1 - Math.sqrt(h.e); if (dd > m) { m = dd; dir = b.cap ? (h.l < .3 ? null : v.norm(h.d)) : null; } }
+      return { m, dir };
+    };
     const fixLimb = (rootK, jointK, endK, l1, l2, side, list, poleOut, pole0) => {
       let extra = [0, 0, 0], pl = pole0;
-      for (let it = 0; it < 2; it++) {
+      for (let it = 0; it < 3; it++) {
         const R0 = J[rootK], E = J[jointK], H = J[endK];
         const pts = [v.add(R0, v.mul(v.sub(E, R0), .65)), E, v.add(E, v.mul(v.sub(H, E), .5)), H];
-        const pen = Math.max(...pts.map(pt => depth(pt, list)));
+        let pen = 0, out = poleOut;
+        pts.forEach(pt => { const h = depthDir(pt, list); if (h.m > pen) { pen = h.m; out = h.dir || poleOut; } });
         if (pen <= 0) return;
         // Ziel stufenlos nach außen nehmen und Ellbogen/Knie stufenlos nach außen drehen
-        extra = v.add(extra, v.mul(poleOut, 16 * pen));
+        extra = v.add(extra, v.mul(out, 16 * pen));
         const w = Math.min(1, pen * 1.6);
-        pl = v.norm(v.add(v.mul(v.norm(pl), 1 - w), v.mul(poleOut, w)));
+        pl = v.norm(v.add(v.mul(v.norm(pl), 1 - w), v.mul(out, w)));
         const res = ik(R0, pushOut(v.add(H, extra), list), l1, l2, pl);
         J[jointK] = res.joint; J[endK] = res.end;
       }
     };
-    fixLimb("shN", "eN", "hN", L.ua, L.fa, 1, vols, v.mul(s, 1), pole(p.eN, defEN));
-    fixLimb("shF", "eF", "hF", L.ua, L.fa, -1, vols, v.mul(s, -1), pole(p.eF, p.eN ? pole(p.eN) : defEF));
     // Beine nur gegen Brustkorb und Kopf prüfen (der Oberschenkel setzt am Becken an)
     fixLimb("hipN", "kN", "fN", L.th, L.sh, 1, [vols[0], vols[3]], v.mul(s, 1), pole(p.kN, defK));
     fixLimb("hipF", "kF", "fF", L.th, L.sh, -1, [vols[0], vols[3]], v.mul(s, -1), pole(p.kF, p.kN ? pole(p.kN) : defK));
+    // Arme gegen Rumpf, Kopf und beide Beine (Oberschenkel dicker als Unterschenkel, plus Armdicke)
+    const legs = ["N", "F"].flatMap(sd => [{ cap: true, a: J["hip" + sd], b: J["k" + sd], r: 10.5 }, { cap: true, a: J["k" + sd], b: J["f" + sd], r: 8.5 }]);
+    fixLimb("shN", "eN", "hN", L.ua, L.fa, 1, vols.concat(legs), v.mul(s, 1), pole(p.eN, defEN));
+    fixLimb("shF", "eF", "hF", L.ua, L.fa, -1, vols.concat(legs), v.mul(s, -1), pole(p.eF, p.eN ? pole(p.eN) : defEF));
     ["hN", "hF"].forEach(k => { if (J[k][1] < 2) J[k] = [J[k][0], 2, J[k][2]]; });
     ["fN", "fF"].forEach(k => { if (J[k][1] < 3.2) J[k] = [J[k][0], 3.2, J[k][2]]; });
     floorFix(J);
