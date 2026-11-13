@@ -153,6 +153,10 @@
     // Blickrichtung (Brust) und Bauchrichtung für die Darstellung
     let sl = v.sub(ax, v.mul(u, v.dot(ax, u))); sl = v.len(sl) < 1e-3 ? s : v.norm(sl);
     J.f = f; J.fLow = v.norm(v.cross(u, sl)); J.u = u; J.hu = hu;
+    // Rundrücken (positiv) oder Hohlkreuz (negativ) als Zahl im ersten Feld, damit er mit geglättet wird
+    J.curlV = [p.curl || 0, 0, 0];
+    // Blickziel: ein Gelenk (z. B. die Hand, der man nachschaut) oder einfach geradeaus
+    J.look = p.look && J[p.look] ? J[p.look] : v.add(J.head, v.mul(f, 60));
     return J;
   }
 

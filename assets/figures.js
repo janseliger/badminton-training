@@ -268,3 +268,22 @@ window.FIGS = (function () {
   Object.keys(caps).forEach(k => F[k] && F[k].frames.forEach((f, i) => { if (caps[k][i]) f.cap = caps[k][i]; }));
   Object.keys(views).forEach(k => { if (F[k]) F[k].views = views[k]; });
 })(window.FIGS);
+
+/* Natürlichere Haltung: Rundrücken bei Bauchübungen, Blick folgt der Hand bei Drehungen */
+(function (F) {
+  const set = (k, fn) => F[k] && F[k].frames.forEach((fr, i) => fn(fr.p, i));
+  set("situp-drehung", (p, i) => { p.curl = i === 1 ? 7 : 3; });
+  set("vsit-einbeinig", (p, i) => { p.curl = i % 2 ? 11 : 1; });
+  set("hollow-rocks", p => { p.curl = 9; });
+  set("fahrrad", p => { p.curl = 9; });
+  set("knie-anziehen", (p, i) => { p.curl = i === 0 ? 8 : 5; });
+  set("russian-twist", p => { p.curl = 6; });
+  set("flutter-kicks", p => { p.curl = 2; });
+  set("mountain-climber", (p, i) => { p.curl = i % 2 ? 5 : 1; });
+  set("fersensitz", (p, i) => { p.curl = i === 0 ? 3 : -2; });
+  set("das-t", (p, i) => { p.curl = i === 1 ? -6 : 0; });
+  set("ausfall-rotation", (p, i) => { if (i === 1) p.look = "hN"; });
+  set("open-book", (p, i) => { p.look = "hN"; });
+  set("grosse-kreise", p => { p.look = "hN"; });
+  set("situp-drehung", (p, i) => { if (i === 0) p.look = "hN"; });
+})(window.FIGS);

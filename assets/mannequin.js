@@ -1,6 +1,6 @@
 /* 3D-Gliederpuppe für die Übungsanimationen.
  * Nutzt die Bewegungsdaten aus figure.js / figures.js (FIGURE_JOINTS) und zeichnet sie mit three.js
- * als Puppe mit Volumen, Licht und Schatten. Zum Drehen der Ansicht mit Maus oder Finger ziehen.
+ * als Figur mit Körperform, Sportkleidung, Licht und Schatten. Zum Drehen der Ansicht mit Maus oder Finger ziehen.
  * Benötigt: three.js (global THREE), assets/figure.js, assets/figures.js
  */
 (function () {
@@ -11,8 +11,9 @@
     const cs = getComputedStyle(el);
     const g = (n, d) => (cs.getPropertyValue(n).trim() || d);
     return {
-      body: g("--mq-body", "#d9b98f"), near: g("--mq-near", "#1f7a55"), far: g("--mq-far", "#7f938a"),
-      joint: g("--mq-joint", "#c9b291"), mat: g("--mq-mat", "#5f7f9a"), floor: g("--mq-floor", "#d8d2c6"),
+      skin: g("--mq-skin", "#d9a882"), shirt: g("--mq-shirt", "#1f7a55"), shorts: g("--mq-shorts", "#24303f"),
+      sock: g("--mq-sock", "#f2f2ee"), shoe: g("--mq-shoe", "#ecedee"), sole: g("--mq-sole", "#3b3f45"),
+      mat: g("--mq-mat", "#5f7f9a"), floor: g("--mq-floor", "#d8d2c6"),
       mark: g("--mq-mark", "#e0901a"), trail: g("--mq-trail", "#e0901a"), face: g("--mq-face", "#2d3b33"), hair: g("--mq-hair", "#3a2e26")
     };
   }
@@ -49,53 +50,115 @@
     const mat = new THREE.Mesh(new THREE.BoxGeometry(180, 1.2, 64), new THREE.MeshStandardMaterial({ color: C.mat, roughness: .95 }));
     mat.position.y = -0.6; mat.receiveShadow = true; scene.add(mat);
 
-    const mBody = new THREE.MeshStandardMaterial({ color: C.body, roughness: .55, metalness: 0 });
-    const mJoint = new THREE.MeshStandardMaterial({ color: C.joint, roughness: .5 });
-    const mNear = new THREE.MeshStandardMaterial({ color: C.near, roughness: .55 });
-    const mFar = new THREE.MeshStandardMaterial({ color: C.far, roughness: .6 });
-    const mFace = new THREE.MeshStandardMaterial({ color: C.face, roughness: .4 });
-    const mHair = new THREE.MeshStandardMaterial({ color: C.hair, roughness: .8 });
-
-    const cyl = new THREE.CylinderGeometry(1, 1, 1, 18);
-    const sph = new THREE.SphereGeometry(1, 22, 16);
+    /* Menschlichere Figur: Haut, Sportshirt, kurze Hose, Socken, Schuhe.
+       Gliedmaßen mit Muskelform (gedrehte Profile), Rumpf als biegsamer Körper,
+       der sich zwischen Becken und Schultern krümmt und verdreht. */
+    const skin = C.skin, shirt = C.shirt, shorts = C.shorts, sock = C.sock, shoe = C.shoe;
+    const mSkin = new THREE.MeshStandardMaterial({ color: skin, roughness: .62 });
+    const mHair = new THREE.MeshStandardMaterial({ color: C.hair, roughness: .85 });
+    const mShoe = new THREE.MeshStandardMaterial({ color: shoe, roughness: .5 });
+    const mSole = new THREE.MeshStandardMaterial({ color: C.sole, roughness: .7 });
+    const mVC = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .62 });
+    const sph = new THREE.SphereGeometry(1, 24, 18);
     const add = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; o.receiveShadow = true; scene.add(o); return o; };
+    const col = c => new THREE.Color(c).convertSRGBToLinear();
 
-    // Gliedmaßen als Kapseln (Zylinder + Kugeln an den Enden)
-    function capsule(m, r1, r2) {
-      const c = add(cyl, m), a = add(sph, m), b = add(sph, m);
+    // Gliedmaß aus einem Profil r(y), y von 0 (Ansatz) bis 1 (Ende), Farbe je Höhe (Ärmel, Hosenbein, Socke)
+    function limbGeo(profile, colorAt) {
+      const pts = []; const N = 18;
+      for (let i = 0; i <= N; i++) { const y = i / N; pts.push(new THREE.Vector2(Math.max(.001, profile(y)), y)); }
+      const g = new THREE.LatheGeometry(pts, 22);
+      const pos = g.attributes.position, cols = [];
+      for (let i = 0; i < pos.count; i++) { const c = col(colorAt(pos.getY(i))); cols.push(c.r, c.g, c.b); }
+      g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+      g.computeVertexNormals();
+      return g;
+    }
+    const bump = (y, c, w) => Math.exp(-((y - c) * (y - c)) / (2 * w * w));
+    const G = {
+      upperArm: limbGeo(y => 4.1 + .9 * bump(y, .25, .18) - .7 * y, y => y < .42 ? shirt : skin),
+      foreArm: limbGeo(y => 3.5 + .7 * bump(y, .22, .2) - 1.4 * y, () => skin),
+      thigh: limbGeo(y => 6.6 + .6 * bump(y, .3, .2) - 2.0 * y, y => y < .5 ? shorts : skin),
+      shin: limbGeo(y => 4.4 + 1.2 * bump(y, .28, .14) - 1.6 * y, y => y > .86 ? sock : skin),
+      neck: limbGeo(y => 3.6 - .2 * y, () => skin)
+    };
+    function limb(geo, rA, rB) {
+      const o = add(geo, mVC), a = add(sph, mVC), b = add(sph, mVC);
+      // Gelenkkugeln in der Farbe der angrenzenden Stelle
+      const ca = geo.attributes.color, top = new THREE.Color(ca.getX(0), ca.getY(0), ca.getZ(0)), bot = new THREE.Color(ca.getX(ca.count - 1), ca.getY(ca.count - 1), ca.getZ(ca.count - 1));
+      a.material = new THREE.MeshStandardMaterial({ color: top, roughness: .62 }); b.material = new THREE.MeshStandardMaterial({ color: bot, roughness: .62 });
       return {
         set(p, q) {
           const P = V(p), Q = V(q), d = Q.clone().sub(P), len = Math.max(d.length(), .01);
-          c.position.copy(P).add(Q).multiplyScalar(.5);
-          c.quaternion.setFromUnitVectors(UP, d.clone().normalize());
-          c.scale.set((r1 + r2) / 2, len, (r1 + r2) / 2);
-          a.position.copy(P); a.scale.setScalar(r1);
-          b.position.copy(Q); b.scale.setScalar(r2);
+          o.position.copy(P); o.quaternion.setFromUnitVectors(UP, d.normalize()); o.scale.set(1, len, 1);
+          a.position.copy(P); a.scale.setScalar(rA); b.position.copy(Q); b.scale.setScalar(rB);
         }
       };
     }
-    // Körperteile mit eigener Ausrichtung (Brustkorb, Becken)
     function blob(m) {
       const o = add(sph, m);
       return {
+        mesh: o,
         set(center, x, y, z, sx, sy, sz) {
           o.position.copy(V(center));
-          const X = V(x).normalize(), Y = V(y).normalize(), Z = V(z).normalize();
-          o.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, Y, Z));
+          o.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(V(x).normalize(), V(y).normalize(), V(z).normalize()));
           o.scale.set(sx, sy, sz);
         }
       };
     }
+    // Schuh: abgerundeter Körper mit Sohle
+    function shoeMesh() {
+      const up = add(sph, mShoe), so = add(new THREE.BoxGeometry(1, 1, 1), mSole);
+      return {
+        set(heel, toe, side) {
+          const H = V(heel), T = V(toe), d = T.clone().sub(H); const len = d.length() + 4;
+          const fwd = d.clone().normalize();
+          let lat = new THREE.Vector3().crossVectors(fwd, UP); if (lat.lengthSq() < 1e-4) lat.set(0, 0, 1); lat.normalize();
+          const upv = new THREE.Vector3().crossVectors(lat, fwd).normalize();
+          const m = new THREE.Matrix4().makeBasis(fwd, upv, lat);
+          up.quaternion.setFromRotationMatrix(m); so.quaternion.copy(up.quaternion);
+          const c = H.clone().add(T).multiplyScalar(.5);
+          up.position.copy(c).addScaledVector(upv, 1.2); up.scale.set(len / 2, 3.4, 4.2);
+          so.position.copy(c).addScaledVector(upv, -1.6); so.scale.set(len * .95, 1.4, 8);
+        }
+      };
+    }
+
+    // Rumpf: Ringe entlang einer Kurve vom Becken zu den Schultern
+    const RINGS = 16, SEG = 26;
+    const torsoGeo = new THREE.BufferGeometry();
+    const tPos = new Float32Array((RINGS * SEG + 2) * 3), tCol = [];
+    const idx = [];
+    for (let r = 0; r < RINGS; r++) {
+      const y = r / (RINGS - 1), c = col(y < .36 ? shorts : shirt);
+      for (let k = 0; k < SEG; k++) tCol.push(c.r, c.g, c.b);
+    }
+    { const c1 = col(shorts), c2 = col(shirt); tCol.push(c1.r, c1.g, c1.b, c2.r, c2.g, c2.b); }
+    for (let r = 0; r < RINGS - 1; r++) for (let k = 0; k < SEG; k++) {
+      const a = r * SEG + k, b = r * SEG + (k + 1) % SEG, c = a + SEG, d = b + SEG;
+      idx.push(a, c, b, b, c, d);
+    }
+    const bottom = RINGS * SEG, top = bottom + 1;
+    for (let k = 0; k < SEG; k++) { idx.push(bottom, k, (k + 1) % SEG); idx.push(top, (RINGS - 1) * SEG + (k + 1) % SEG, (RINGS - 1) * SEG + k); }
+    torsoGeo.setIndex(idx);
+    torsoGeo.setAttribute("position", new THREE.BufferAttribute(tPos, 3));
+    torsoGeo.setAttribute("color", new THREE.Float32BufferAttribute(tCol, 3));
+    const torso = add(torsoGeo, mVC);
+    torso.frustumCulled = false;
+    // Breite (seitlich) und Tiefe (vorn/hinten) des Rumpfs von Becken (0) bis Schultern (1)
+    const prof = (y, tab) => { for (let i = 1; i < tab.length; i++) if (y <= tab[i][0]) { const a = tab[i - 1], b = tab[i], k = (y - a[0]) / (b[0] - a[0]); return a[1] + (b[1] - a[1]) * (k * k * (3 - 2 * k)); } return tab[tab.length - 1][1]; };
+    const WID = [[0, 11.5], [.1, 15], [.3, 14.2], [.45, 12.6], [.65, 14.6], [.85, 16.4], [.95, 15.2], [1, 9]];
+    const DEP = [[0, 8], [.1, 10], [.3, 9.6], [.45, 8.8], [.65, 10.6], [.85, 9.6], [.95, 8], [1, 5]];
 
     const parts = {
-      thN: capsule(mNear, 6.2, 4.6), shinN: capsule(mNear, 4.6, 3.4),
-      thF: capsule(mFar, 6.2, 4.6), shinF: capsule(mFar, 4.6, 3.4),
-      uaN: capsule(mNear, 4.0, 3.2), faN: capsule(mNear, 3.2, 2.4),
-      uaF: capsule(mFar, 4.0, 3.2), faF: capsule(mFar, 3.2, 2.4),
-      footN: capsule(mNear, 3.0, 2.2), footF: capsule(mFar, 3.0, 2.2),
-      neck: capsule(mBody, 3.4, 3.4), waist: capsule(mBody, 9, 9.5),
-      chest: blob(mBody), pelvis: blob(mBody), head: blob(mBody),
-      handN: blob(mNear), handF: blob(mFar), nose: blob(mBody), hair: blob(mHair)
+      uaN: limb(G.upperArm, 4.6, 3.4), faN: limb(G.foreArm, 3.4, 2.2),
+      uaF: limb(G.upperArm, 4.6, 3.4), faF: limb(G.foreArm, 3.4, 2.2),
+      thN: limb(G.thigh, 6.8, 4.7), shinN: limb(G.shin, 4.7, 2.9),
+      thF: limb(G.thigh, 6.8, 4.7), shinF: limb(G.shin, 4.7, 2.9),
+      neck: limb(G.neck, 3.6, 3.4),
+      head: blob(mSkin), hair: blob(mHair), nose: blob(mSkin), earN: blob(mSkin), earF: blob(mSkin),
+      handN: blob(mSkin), handF: blob(mSkin), thumbN: blob(mSkin), thumbF: blob(mSkin),
+      shoeN: shoeMesh(), shoeF: shoeMesh()
     };
 
     // Fokus-Ring und Bewegungsbahn
@@ -109,36 +172,68 @@
     const lerp = (a, b, k) => addv(a, mul(sub(b, a), k));
     const nrm = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return mul(a, 1 / l); };
     const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const slerpV = (a, b, k) => { a = nrm(a); b = nrm(b); const d = Math.max(-1, Math.min(1, dot(a, b))), w = Math.acos(d); if (w < 1e-3) return nrm(lerp(a, b, k)); const s = Math.sin(w); return addv(mul(a, Math.sin((1 - k) * w) / s), mul(b, Math.sin(k * w) / s)); };
 
     let breath = 0;
     function pose(J) {
-      // Füße: gestreckt, wenn das Schienbein flach liegt, sonst flach nach vorn
-      const toe = (k, f) => { const d = nrm(sub(J[f], J[k])); const dir = Math.abs(d[1]) < .5 ? d : [1, 0, 0]; const t = addv(J[f], mul(dir, 12)); t[1] = Math.max(t[1], 2.2); return t; };
-      const toeN = toe("kN", "fN"), toeF = toe("kF", "fF");
-      parts.thN.set(J.hipN, J.kN); parts.shinN.set(J.kN, J.fN); parts.footN.set(J.fN, toeN);
-      parts.thF.set(J.hipF, J.kF); parts.shinF.set(J.kF, J.fF); parts.footF.set(J.fF, toeF);
+      const sAx = nrm(sub(J.shN, J.shF)), pAx = nrm(sub(J.hipN, J.hipF));
+      const curl = J.curlV ? J.curlV[0] : 0;
+      // Rumpfkurve: Becken unten, Schultern oben, Mitte nach hinten (Rundrücken) oder vorn (Hohlkreuz) verschoben
+      const A = addv(J.P, mul(J.u, -6)), B = addv(J.S, mul(J.u, 3));
+      const backDir = nrm(addv(mul(J.f, -1), mul(J.fLow, -1)));
+      const Cc = addv(lerp(A, B, .5), mul(backDir, curl * 1.5));
+      const bez = t => addv(addv(mul(A, (1 - t) * (1 - t)), mul(Cc, 2 * t * (1 - t))), mul(B, t * t));
+      const br = 1 + .025 * Math.sin(breath);
+      for (let r = 0; r < RINGS; r++) {
+        const y = r / (RINGS - 1);
+        const c = bez(y), tan = nrm(sub(bez(Math.min(1, y + .02)), bez(Math.max(0, y - .02))));
+        let side = slerpV(pAx, sAx, Math.max(0, Math.min(1, (y - .2) / .7)));
+        side = nrm(sub(side, mul(tan, dot(side, tan))));
+        const fr = nrm(cross(tan, side));
+        const wx = prof(y, WID), wz = prof(y, DEP) * (y > .5 ? br : 1);
+        for (let k = 0; k < SEG; k++) {
+          const a = k / SEG * Math.PI * 2;
+          const p = addv(c, addv(mul(side, Math.cos(a) * wx), mul(fr, Math.sin(a) * wz)));
+          tPos.set(p, (r * SEG + k) * 3);
+        }
+      }
+      tPos.set(addv(bez(0), mul(J.u, -1)), bottom * 3); tPos.set(addv(bez(1), mul(J.u, 1)), top * 3);
+      torsoGeo.attributes.position.needsUpdate = true; torsoGeo.computeVertexNormals(); torsoGeo.computeBoundingSphere();
+
+      // Arme und Beine
       parts.uaN.set(J.shN, J.eN); parts.faN.set(J.eN, J.hN);
       parts.uaF.set(J.shF, J.eF); parts.faF.set(J.eF, J.hF);
-      const sAx = nrm(sub(J.shN, J.shF)), pAx = nrm(sub(J.hipN, J.hipF));
-      // Brustkorb
-      const chestC = lerp(J.S, J.P, .28);
-      const br = 1 + .03 * Math.sin(breath);
-      parts.chest.set(chestC, sAx, J.u, J.f, 15.5 * (1 + .01 * Math.sin(breath)), 19, 10.5 * br);
-      // Becken
-      const pelC = lerp(J.P, J.S, .02);
-      parts.pelvis.set(pelC, pAx, J.u, J.fLow, 14.5, 10, 9.5);
-      parts.waist.set(lerp(J.P, J.S, .18), lerp(J.P, J.S, .55));
-      // Hals und Kopf mit Gesicht
-      const neckTop = addv(J.S, mul(J.hu, 6));
-      parts.neck.set(lerp(J.S, J.P, -.02), neckTop);
-      const hf = nrm(cross(J.hu, cross(J.f, J.hu)));
-      const hs = nrm(cross(J.hu, hf));
-      parts.head.set(J.head, hs, J.hu, hf, 8.2, 10, 9);
-      parts.nose.set(addv(J.head, addv(mul(hf, 8.4), mul(J.hu, -1.2))), hs, J.hu, hf, 1.8, 2.6, 2.6);
-      // Haare hinten und oben: zeigen eindeutig, wohin das Gesicht schaut
-      parts.hair.set(addv(J.head, addv(mul(hf, -1.6), mul(J.hu, 1.4))), hs, J.hu, hf, 8.6, 9.6, 8.2);
-      parts.handN.set(J.hN, sAx, J.u, J.f, 3.6, 4.2, 2.4);
-      parts.handF.set(J.hF, sAx, J.u, J.f, 3.6, 4.2, 2.4);
+      parts.thN.set(J.hipN, J.kN); parts.shinN.set(J.kN, J.fN);
+      parts.thF.set(J.hipF, J.kF); parts.shinF.set(J.kF, J.fF);
+      // Füße: gestreckt, wenn das Schienbein flach liegt, sonst flach nach vorn
+      const toe = (k, f) => { const d = nrm(sub(J[f], J[k])); const dir = Math.abs(d[1]) < .5 ? d : [1, 0, 0]; const t = addv(J[f], mul(dir, 13)); t[1] = Math.max(t[1], 2.4); return t; };
+      parts.shoeN.set(addv(J.fN, [0, -1, 0]), toe("kN", "fN"), 1); parts.shoeF.set(addv(J.fF, [0, -1, 0]), toe("kF", "fF"), -1);
+      // Hände: flach, Daumen innen
+      const hand = (key, e, side, hb, tb) => {
+        const d = nrm(sub(J[key], J[e])); let lat = nrm(sub(sAx, mul(d, dot(sAx, d)))); const pal = nrm(cross(d, lat));
+        hb.set(addv(J[key], mul(d, 3.2)), lat, d, pal, 3.6, 5.2, 1.9);
+        tb.set(addv(addv(J[key], mul(d, 1.2)), mul(lat, -side * 3.2)), lat, d, pal, 1.2, 2.6, 1.2);
+      };
+      hand("hN", "eN", 1, parts.handN, parts.thumbN); hand("hF", "eF", -1, parts.handF, parts.thumbF);
+
+      // Hals und Kopf; der Blick folgt dem Blickziel (z. B. der Hand)
+      const neckBase = addv(B, mul(J.u, -2));
+      let hu = J.hu;
+      const lookDir = nrm(sub(J.look, J.head));
+      let hf = nrm(cross(hu, cross(J.f, hu)));
+      // Kopf bis zu 60 % zum Ziel drehen und neigen
+      const tgtF = nrm(sub(lookDir, mul(hu, dot(lookDir, hu) * .5)));
+      hf = slerpV(hf, tgtF, .6);
+      hu = nrm(sub(hu, mul(hf, dot(hu, hf))));
+      const hs = nrm(cross(hu, hf));
+      const headC = addv(neckBase, mul(hu, 15));
+      parts.neck.set(neckBase, addv(headC, mul(hu, -6)));
+      parts.head.set(headC, hs, hu, hf, 7.6, 9.6, 8.6);
+      parts.hair.set(addv(headC, addv(mul(hf, -1.4), mul(hu, 1.6))), hs, hu, hf, 8.1, 9.4, 8.4);
+      parts.nose.set(addv(headC, addv(mul(hf, 8.2), mul(hu, -1.2))), hs, hu, hf, 1.4, 2.2, 2.2);
+      parts.earN.set(addv(headC, addv(mul(hs, 7.4), mul(hf, -.6))), hs, hu, hf, 1, 2.4, 1.6);
+      parts.earF.set(addv(headC, addv(mul(hs, -7.4), mul(hf, -.6))), hs, hu, hf, 1, 2.4, 1.6);
     }
 
     /* Kamera: Ausgangswinkel aus der Übung, dann mit Ziehen frei drehbar */
