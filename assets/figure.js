@@ -257,7 +257,10 @@
     const kd = ease((r - .08) / .92);
     const A = solve(p), B = solve(q);
     const flat = (pp, J) => Object.assign({}, pp, { hN: J.hN, hF: J.hF, fN: J.fN, fF: J.fF, P: J.P });
-    const pa = flat(p, A), pb = flat(q, B);
+    // Fehlende Zahlenwerte (z. B. keine Drehung angegeben) mit ihrem Standard füllen, sonst würde
+    // der Wert der anderen Pose bis zum Ende festgehalten und dann springen
+    const DEF = { t: 180, tw: 0, lat: 0, hd: 0, yaw: 0, roll: 0, curl: 0 };
+    const pa = Object.assign({}, DEF, flat(p, A)), pb = Object.assign({}, DEF, flat(q, B));
     // Beugerichtungen als tatsächliche Richtung Gelenk minus Ansatz übernehmen
     const root = { eN: "shN", eF: "shF", kN: "hipN", kF: "hipF" };
     const endOf = { eN: "hN", eF: "hF", kN: "fN", kF: "fF" };
@@ -279,7 +282,14 @@
       const dir = slerp(ra, rb, kd), len = v.len(ra) + (v.len(rb) - v.len(ra)) * kd;
       base[e] = v.add(mid[rt], v.mul(dir, len));
     });
-    return solve(base);
+    // Blickziel stufenlos ein- und ausblenden statt umzuspringen
+    const lk = q.look || p.look; delete base.look;
+    const J = solve(base);
+    if (lk && J[lk]) {
+      const w = (p.look === lk ? 1 - k : 0) + (q.look === lk ? k : 0);
+      J.look = v.add(v.mul(J[lk], w), v.mul(J.look, 1 - w));
+    }
+    return J;
   }
 
   /* Projektion */
