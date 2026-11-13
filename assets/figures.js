@@ -113,8 +113,8 @@ window.FIGS = (function () {
     ]},
 
     "huefte-einbeinig": { trail: [], mark: "P", cam: { yaw: -26, pitch: 16 }, frames: [
-      { d: .9, hold: .5, p: supine({ P: [0, 8], hN: [2, 2, 16], hF: [0, 2, -16], fN: [26, 0], kN: up, fF: { at: "hipF", w: [16, 20, 0] }, kF: [-1, 1.2, 0] }) },
-      { d: 1, hold: 1, p: supine({ P: [0, 33], t: -62, hd: -14, hN: [-4, 2, 16], hF: [-6, 2, -16], eN: up, fN: [26, 0], kN: up, fF: { at: "hipF", w: [16, 20, 0] }, kF: [-1, 1.2, 0] }) }
+      { d: .9, hold: .5, p: supine({ P: [0, 8], hN: [2, 2, 16], hF: [0, 2, -16], fN: [26, 0], kN: up, fF: { at: "hipF", w: [10, 84, 0] }, kF: [1, .2, 0] }) },
+      { d: 1, hold: 1, p: supine({ P: [0, 33], t: -62, hd: -14, hN: [-4, 2, 16], hF: [-6, 2, -16], eN: up, fN: [26, 0], kN: up, fF: { at: "hipF", w: [10, 84, 0] }, kF: [1, .2, 0] }) }
     ]},
 
     "das-t": { cam3d: { yaw: -62, pitch: 18 }, trail: ["hN", "hF"], mark: "S", cam: { yaw: -82, pitch: 30 }, frames: [
@@ -246,8 +246,8 @@ window.FIGS = (function () {
   "Zurück"
  ],
  "huefte-einbeinig": [
-  "Ablegen",
-  "Hüfte hoch, Knie bleibt an der Brust"
+  "Ablegen, Bein bleibt oben",
+  "Hüfte hoch, Bein gestreckt zur Decke"
  ],
  "das-t": [
   "Arme seitlich ablegen",
