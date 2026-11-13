@@ -19,8 +19,12 @@ window.FIGS = (function () {
     ]},
 
     sprunggelenk: { trail: "kN", mark: "fN", cam: { yaw: -16, pitch: 10 }, frames: [
-      { d: 1, hold: .5, p: { P: [0, 46], t: 180, fN: [37, 0], fF: [-42, 3], kN: [1, .2, 0], kF: [.3, -1, 0], hN: { at: "S", w: [24, -50, 10] }, hF: { at: "S", w: [24, -50, 2] } } },
-      { d: 1.2, hold: .9, p: { P: [29, 43], t: 172, fN: [37, 0], fF: [-42, 3], kN: [1, .1, 0], kF: [.3, -1, 0], hN: { at: "S", w: [26, -48, 10] }, hF: { at: "S", w: [26, -48, 2] } } }
+      { d: 1, hold: .5, p: { P: [-1, 47], t: 180, fN: [37, 0], fF: [-42, 3], kN: [1, .2, 0], kF: [.3, -1, 0], hN: { at: "S", w: [24, -50, 10] }, hF: { at: "S", w: [24, -50, 2] } } },
+      { d: 1.2, hold: .9, p: { P: [17, 43], t: 172, fN: [37, 0], fF: [-42, 3], kN: [1, .1, 0], kF: [.3, -1, 0], hN: { at: "S", w: [26, -48, 10] }, hF: { at: "S", w: [26, -48, 2] } } },
+      { d: 1, hold: .5, p: { P: [-1, 47], t: 180, fN: [37, 0], fF: [-42, 3], kN: [1, .2, 0], kF: [.3, -1, 0], hN: { at: "S", w: [24, -50, 10] }, hF: { at: "S", w: [24, -50, 2] } } },
+      { d: 1.1, hold: .4, p: { P: [-1, 47], t: 180, fN: [14, 0, 38], fF: [-42, 3], kN: [.5, .2, 1], kF: [.3, -1, 0], hN: { at: "S", w: [24, -50, 10] }, hF: { at: "S", w: [24, -50, 2] } } },
+      { d: 1.2, hold: .9, p: { P: [5, 44, 6], t: 175, fN: [14, 0, 38], fF: [-42, 3], kN: [.5, .1, 1], kF: [.3, -1, 0], hN: { at: "S", w: [26, -48, 10] }, hF: { at: "S", w: [26, -48, 2] } } },
+      { d: 1.1, hold: .3, p: { P: [-1, 47], t: 180, fN: [14, 0, 38], fF: [-42, 3], kN: [.5, .2, 1], kF: [.3, -1, 0], hN: { at: "S", w: [24, -50, 10] }, hF: { at: "S", w: [24, -50, 2] } } }
     ]},
 
     "9090-haende": { cam3d: { yaw: -55, pitch: 26 }, trail: ["kN", "kF"], cam: { yaw: -78, pitch: 26 }, frames: [
@@ -133,6 +137,16 @@ window.FIGS = (function () {
       { d: .5, hold: 0, p: plank({ P: [-2, 41.5], t: 108, fF: [-48, 24], kF: [1, -.6, 0], tuck: [1, .3] }) }
     ]},
 
+    "liegestuetz": { cam3d: { yaw: -22, pitch: 12 }, trail: [], mark: "S", cam: { yaw: -40, pitch: 22 }, frames: [
+      { d: .9, hold: .4, p: plank({ hN: [46, 0, 25], hF: [46, 0, -25], eN: [-1, .4, .8], eF: [-1, .4, -.8] }) },
+      { d: 1.3, hold: .3, p: plank({ P: [0, 17], t: 93, hd: 4, hN: [46, 0, 25], hF: [46, 0, -25], eN: [-1, .4, .8], eF: [-1, .4, -.8] }) }
+    ]},
+
+    "ausfall-tief": { trail: "P", mark: "hipN", cam: { yaw: -14, pitch: 12 }, frames: [
+      { d: 1.2, hold: .6, p: lunge({ fN: [44, 0, 26], kN: [1, .3, .7], P: [0, 30], t: 122, hN: [38, 0, 4], hF: [38, 0, -12], eN: [1, 0, .5] }) },
+      { d: 1.8, hold: 1.4, p: lunge({ fN: [44, 0, 26], kN: [1, .3, .7], P: [-4, 22], t: 106, hd: 6, hN: [64, 2, 6], hF: [64, 2, -12], eN: [0, -1, .2], eF: [0, -1, -.2] }) }
+    ]},
+
     "hueftbeuger": { trail: "P", mark: "hipF", cam: { yaw: -16, pitch: 10 }, frames: [
       { d: 1.4, hold: .6, p: { P: [2, 32], t: 178, fN: [44, 0], fF: [-54, 2], kN: [1, .3, 0], kF: [1, -1, 0], hN: { at: "hipN", w: [2, 4, 6] }, hF: { at: "hipF", w: [2, 4, -6] }, eN: [-1, 0, .4], eF: [-1, 0, -.4] } },
       { d: 1.6, hold: 1.2, p: { P: [10, 24], t: 176, fN: [44, 0], fF: [-54, 2], kN: [1, .3, 0], kF: [1, -1, 0], hN: { at: "hipN", w: [2, 4, 6] }, hF: { at: "hipF", w: [2, 4, -6] }, eN: [-1, 0, .4], eF: [-1, 0, -.4] } }
@@ -167,7 +181,11 @@ window.FIGS = (function () {
  ],
  "sprunggelenk": [
   "Zurück, Ferse bleibt am Boden",
-  "Knie über die Zehen schieben"
+  "Knie über die Zehen nach vorn schieben",
+  "Zurück",
+  "Fuß zur Seite stellen",
+  "Knie über die Zehen zur Seite schieben",
+  "Zurück"
  ],
  "9090-haende": [
   "Mitte",
@@ -262,6 +280,14 @@ window.FIGS = (function () {
   "Anderen Fuß abheben",
   "Anderes Knie zur Brust",
   "Zurück"
+ ],
+ "liegestuetz": [
+  "Stütz, Körper gerade",
+  "Brust langsam Richtung Boden"
+ ],
+ "ausfall-tief": [
+  "Großer Ausfallschritt, hinten auf den Zehen",
+  "Tiefer sinken, Ellbogen Richtung Boden"
  ],
  "hueftbeuger": [
   "Aufrecht knien",

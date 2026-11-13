@@ -63,9 +63,9 @@ WORKOUT({
         focus: "Rücken flach auf den Boden drücken.", light: "Hände unter das Gesäß, Beine höher halten." }
     ]},
     { name: "Stabilität im Stütz", prep: 30, work: 30, steps: [
-      { n: "Stütz mit Schulterklopfen", fig: "schulterklopfen", dose: "30 Sek.", v: { k: "LEG", t: 224, e: 272 },
-        how: "Liegestützposition. Abwechselnd mit einer Hand die gegenüberliegende Schulter antippen.",
-        focus: "Hüfte bleibt ruhig und dreht nicht mit.", light: "Auf den Knien." },
+      { n: "Liegestütze", fig: "liegestuetz", dose: "30 Sek., saubere Wdh. in eigenem Tempo", v: { k: "LEG", t: 222, e: 278 },
+        how: "Liegestützposition, Hände etwas weiter als schulterbreit. Körper von Kopf bis Fuß gerade halten, die Brust langsam Richtung Boden senken und wieder hochdrücken.",
+        focus: "Hüfte nicht durchhängen lassen, Bauch fest. Lieber weniger, dafür sauber.", light: "Auf den Knien oder Hände erhöht auf einer Bank." },
       { n: "Einbeinige Hüftbrücke", fig: "huefte-einbeinig", dose: "15 Sek. je Seite", sw: 15, v: { k: "LEG", t: 158, e: 216 },
         how: "Rückenlage, ein Fuß aufgestellt, das andere Bein gestreckt zur Decke. Über die Ferse des aufgestellten Fußes die Hüfte hochdrücken, bis Knie, Hüfte und Schulter in einer Linie sind, langsam ablegen.",
         focus: "Oben halten, langsam ab.", light: "Beidbeinig." },
@@ -77,9 +77,9 @@ WORKOUT({
         focus: "Hände direkt unter den Schultern, Hüfte bleibt unten.", light: "Hände erhöht auf Bank oder Kasten." }
     ]},
     { name: "Cool-down", prep: 15, steps: [
-      { n: "Hüftbeuger im tiefen Ausfallschritt", fig: "hueftbeuger", work: 60, sw: 30, dose: "30 Sek. je Seite", v: { k: "MOB", t: 291, e: 432 },
-        how: "Tiefer Ausfallschritt, das hintere Knie darf am Boden liegen. Mit jedem Ausatmen etwas tiefer sinken.",
-        focus: "Ruhig atmen." },
+      { n: "Tiefer Ausfallschritt", fig: "ausfall-tief", work: 60, sw: 30, dose: "30 Sek. je Seite", v: { k: "MOB", t: 300, e: 335 },
+        how: "Großer Ausfallschritt, vorderer Fuß vor dem Knie, hinten auf den Zehen. Beide Hände innen neben den vorderen Fuß und mit jedem Ausatmen tiefer sinken, die Ellbogen Richtung Boden.",
+        focus: "Ruhig atmen, die Hüfte lösen.", light: "Hinteres Knie ablegen, Arme bleiben gestreckt." },
       { n: "Open Book", fig: "open-book", work: 90, sw: 45, dose: "6× je Seite", v: { k: "MOB", t: 540, e: 606 },
         how: "Seitlage, Hüfte und Knie je 90° gebeugt, Knie liegen übereinander, Hände aufeinander. Den oberen Arm zur anderen Seite öffnen, so weit es geht, und wieder schließen.",
         focus: "Knie bleiben übereinander. Ein Handtuch unter dem Kopf hilft." },
