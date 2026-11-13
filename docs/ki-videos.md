@@ -40,3 +40,17 @@ Auswege:
   Das sieht gut aus, ist bei der Technik aber unzuverlässig. Deshalb jeden Clip genau prüfen.
 - eine kurze eigene Aufnahme mit dem Handy als Bewegungsvorlage. Die KI macht daraus
   dann die einheitliche Person.
+
+## Stand: so wurden die aktuellen Clips gemacht
+
+Alle 21 Übungen der Einheit „Core & Beweglichkeit“ haben einen Clip in `clips/`.
+Erzeugt mit Google Flow (Video-zu-Video): `refclips/ref_<übung>.mp4` hochladen und diesen Prompt nutzen:
+
+> Turn the 3D mannequin into a real human: a fit recreational athlete, man around 35, short brown hair,
+> plain dark green t-shirt, black sports shorts, white indoor sports shoes, on a light blue exercise mat
+> in a bright, clean sports hall. Keep the movement, timing, body position and camera exactly the same as
+> in the original video. Smooth, fluid, continuous motion at natural speed, no stutter, no jumps.
+> Photorealistic, natural skin and fabric, no text, no logos.
+
+Ergebnis in 720p laden und für das Repo verkleinern:
+`ffmpeg -i in.mp4 -an -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart clips/<übung>.mp4`
