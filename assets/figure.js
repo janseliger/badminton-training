@@ -50,25 +50,36 @@
   }
 
   /* Mittelgelenk (Knie/Ellbogen) um die Achse Wurzel–Ende drehen, bis es nicht im Boden steckt */
-  function liftJoint(R0, E, H, minY) {
+  function liftJoint(R0, E, H, minY, out) {
     if (E[1] >= minY) return E;
     const ax = v.norm(v.sub(H, R0)), c = v.add(R0, v.mul(ax, v.dot(v.sub(E, R0), ax)));
     const q0 = v.sub(E, c), r = v.len(q0); if (r < .5) return E;
     const q = v.mul(q0, 1 / r), w = v.cross(ax, q);
     let best = E, by = E[1];
+    const first = [null, null];
     for (let i = 1; i <= 90; i++) {
-      for (const sg of [1, -1]) {
+      [1, -1].forEach((sg, si) => {
+        if (first[si]) return;
         const a = sg * i * Math.PI / 90, P2 = v.add(c, v.add(v.mul(q, r * Math.cos(a)), v.mul(w, r * Math.sin(a))));
-        if (P2[1] >= minY) return P2;
+        if (P2[1] >= minY) first[si] = { P2, i };
         if (P2[1] > by) { by = P2[1]; best = P2; }
-      }
+      });
+      if (first[0] && first[1]) break;
     }
-    return best;
+    const [A, B] = first;
+    if (!A || !B) return (A || B || { P2: best }).P2;
+    // nach außen drehen (weg von der Körpermitte), damit sich Beine und Arme nicht kreuzen – solange der Umweg klein bleibt
+    if (out) {
+      const da = v.dot(v.sub(A.P2, c), out), db = v.dot(v.sub(B.P2, c), out);
+      const outer = da >= db ? A : B, inner = da >= db ? B : A;
+      return outer.i <= inner.i + 30 ? outer.P2 : inner.P2;
+    }
+    return A.i <= B.i ? A.P2 : B.P2;
   }
   // Knie und Ellbogen liegen höchstens auf, stecken aber nie im Boden; Knochenlängen bleiben erhalten
   function floorFix(J) {
-    [["hipN", "kN", "fN", 4.5], ["hipF", "kF", "fF", 4.5], ["shN", "eN", "hN", 3.5], ["shF", "eF", "hF", 3.5]]
-      .forEach(([r, j, e, m]) => { J[j] = liftJoint(J[r], J[j], J[e], m); });
+    [["hipN", "kN", "fN", 4.5, "P"], ["hipF", "kF", "fF", 4.5, "P"], ["shN", "eN", "hN", 3.5, "S"], ["shF", "eF", "hF", 3.5, "S"]]
+      .forEach(([r, j, e, m, c]) => { J[j] = liftJoint(J[r], J[j], J[e], m, v.sub(J[r], J[c])); });
   }
 
   function solve(p) {
@@ -194,6 +205,9 @@
     // Rundrücken (positiv) oder Hohlkreuz (negativ) als Zahl im ersten Feld, damit er mit geglättet wird
     J.curlV = [p.curl || 0, 0, 0];
     J.tuckV = [p.tuck ? p.tuck[0] : 0, p.tuck ? p.tuck[1] : 0, 0];
+    // optional fester Fußwinkel (Grad zwischen Schienbein und Fuß, z. B. 20 = Zehen gestreckt); zweites Feld = Gewicht
+    const faOf = i => { const x = Array.isArray(p.fa) ? p.fa[i] : p.fa; return x === undefined || x === null ? [0, 0, 0] : [x, 1, 0]; };
+    J.faNV = faOf(0); J.faFV = faOf(1);
     // Blickziel: ein Gelenk (z. B. die Hand, der man nachschaut) oder einfach geradeaus
     J.look = p.look && J[p.look] ? J[p.look] : v.add(J.head, v.mul(f, 60));
     return J;
@@ -236,7 +250,9 @@
     const load = Math.max(0, Math.min(1, (10 - a[1]) / 4)) * Math.max(0, Math.min(1, (-sd[1] - .45) / .25));
     const tuck = J.tuckV ? J.tuckV[side === "N" ? 0 : 1] : 0;
     const high = Math.max(0, Math.min(1, (a[1] - 25) / 30));
-    const th0 = 52 - 16 * high + 38 * load + 66 * tuck;
+    let th0 = 52 - 16 * high + 38 * load + 66 * tuck;
+    const fv = J["fa" + side + "V"];
+    if (fv && fv[1] > .01) { const wf = Math.min(1, fv[1]); th0 = th0 * (1 - wf) + (fv[0] / fv[1]) * wf; }
     const at = th => {
       const r = R(th), fw = v.add(v.mul(sd, Math.cos(r)), v.mul(ant, Math.sin(r))), up = v.add(v.mul(sd, -Math.sin(r)), v.mul(ant, Math.cos(r)));
       const heel = v.sub(a, v.mul(fw, FOOT.back)), toe = v.add(a, v.mul(fw, FOOT.front - 4 * tuck));
@@ -541,5 +557,6 @@
   window.FIGURE_DRAW = (canvas, anim, t) => draw(canvas.getContext("2d"), canvas.width, canvas.height, anim, t, canvas);
   window.FIGURE_TOTAL = total;
   window.FIGURE_JOINTS = jointsAt;
+  window.FIGURE_RAW = jointsRaw;
   window.FIGURE_CAP = capAt;
 })();
