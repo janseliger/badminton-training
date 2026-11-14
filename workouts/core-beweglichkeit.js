@@ -84,7 +84,7 @@ WORKOUT({
         how: "Seitlage, Hüfte und Knie je 90° gebeugt, Knie liegen übereinander, Hände aufeinander. Den oberen Arm zur anderen Seite öffnen, so weit es geht, und wieder schließen.",
         focus: "Knie bleiben übereinander. Ein Handtuch unter dem Kopf hilft." },
       { n: "Große Kreise", fig: "grosse-kreise", work: 80, sw: 40, dose: "3× je Seite", v: { k: "MOB", t: 606, e: 660 },
-        how: "Aus derselben Seitlage mit den Fingerspitzen einen großen Kreis über den Kopf zur anderen Seite und zurück ziehen.",
+        how: "Aus derselben Seitlage den oberen Arm mit den Fingerspitzen am Boden in einem großen Halbkreis über den Kopf nach hinten führen, Brust öffnen, und denselben Weg zurück.",
         focus: "Knie bleiben übereinander, langsam." }
     ]}
   ]
