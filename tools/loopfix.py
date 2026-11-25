@@ -3,7 +3,7 @@
 Sucht am Ende den Schnittpunkt, der dem Anfang am ähnlichsten ist (die letzten Bilder der KI
 werden gemieden, dort ruckelt es oft), und blendet die letzten K Bilder weich in den Anfang über.
 Aufruf: loopfix.py in.mp4 out.mp4"""
-import sys, subprocess, numpy as np
+import sys, os, subprocess, numpy as np
 src, dst = sys.argv[1], sys.argv[2]
 fps, W, H = 24, 960, 540
 raw = subprocess.run(["ffmpeg","-v","error","-i",src,"-vf",f"fps={fps},scale={W}:{H}","-pix_fmt","rgb24","-f","rawvideo","-"],capture_output=True,check=True).stdout
@@ -19,11 +19,15 @@ for s0 in range(K, min(K + int(1.6*fps), n//3)):
         score = d - 0.004*(c - s0)                      # längere Schleifen leicht bevorzugen
         if best is None or score < best[0]: best = (score, d, s0, c)
 _, d, S0, c = best
+if os.environ.get('LOOP'):
+    S0, c = map(int, os.environ['LOOP'].split(','))
+    K = min(K, S0)
+    d = float(np.mean(np.abs(small[c-K:c] - small[S0-K:S0])))
 p = subprocess.Popen(["ffmpeg","-v","error","-y","-f","rawvideo","-pix_fmt","rgb24","-s",f"{W}x{H}","-r",str(fps),"-i","-",
                       "-an","-c:v","libx264","-preset","veryfast","-crf","22","-pix_fmt","yuv420p","-movflags","+faststart",dst],stdin=subprocess.PIPE)
 mode = "Überblendung"
 import os
-if d <= 3.1 and not os.environ.get("PINGPONG"):
+if not os.environ.get("PP") and os.environ.get("LOOP") or (d <= 3.1 and not os.environ.get("PINGPONG")):
     L = c - S0
     for j in range(L):
         f = F[S0+j]
@@ -39,6 +43,7 @@ else:
     sm = np.convolve(sp, np.ones(5)/5, mode="same")
     a0 = int(np.argmin(sm[2:int(1.2*fps)])) + 2
     b0 = int(np.argmin(sm[n-int(1.4*fps):n-6])) + n-int(1.4*fps)
+    if os.environ.get('PP'): a0, b0 = map(int, os.environ['PP'].split(','))
     seq = list(range(a0, b0+1)) + list(range(b0-1, a0, -1))
     for i in seq: p.stdin.write(F[i].tobytes())
     S0, c, L = a0, b0, len(seq)
