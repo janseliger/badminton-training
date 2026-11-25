@@ -321,7 +321,9 @@
       onCaption(fn) { onCap = fn; },
       speed(x) { speed = x; },
       freeze(t) { fixed = t; },
-      stop() { cancelAnimationFrame(raf); renderer.dispose(); }
+      stop() { cancelAnimationFrame(raf); renderer.dispose(); },
+      // für eigene Kulissen (z. B. Badmintonfeld in den Video-Vorlagen)
+      scene, floor, mat
     };
   };
 })();
