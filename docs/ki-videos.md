@@ -64,3 +64,9 @@ Ergebnis in 720p laden und für das Repo verkleinern:
   position, mat, court lines and camera exactly the same …“
 - Danach macht `tools/loopfix.py` aus jedem KI-Clip eine nahtlose Schleife: Passen Ende und Anfang zusammen,
   wird weich überblendet; sonst läuft der Clip vor und zurück, mit den Umkehrpunkten in den Haltephasen.
+- Bei Übungen mit gleichmäßigem Ablauf (Fahrrad, Knie anziehen, 90/90, Mountain Climber, Russian Twist,
+  Hollow Rocks) läuft die Schleife immer vorwärts: `tools/cyc.py clip.mp4` sucht passende Wiederholungen,
+  dann `LOOP=start,ende python3 tools/loopfix.py in.mp4 out.mp4`. Vor/zurück (`PP=a,b`) nur, wo die Bewegung
+  rückwärts genauso aussieht (90/90 mit Hüftstreckung: Sitz → hoch → Sitz).
+- Knie anziehen: Die KI hatte Hanteln dazuerfunden; im Prompt jetzt ausdrücklich „arms crossed, hands empty,
+  NO dumbbells“.
