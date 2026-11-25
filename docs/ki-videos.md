@@ -54,3 +54,13 @@ Erzeugt mit Google Flow (Video-zu-Video): `refclips/ref_<übung>.mp4` hochladen 
 
 Ergebnis in 720p laden und für das Repo verkleinern:
 `ffmpeg -i in.mp4 -an -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart clips/<übung>.mp4`
+
+## Stand v5: gleiche Umgebung und flüssige Schleifen
+
+- Die Vorlagen (`refclips/ref_<übung>-v5.mp4`) zeigen die Figur auf einer Matte auf einem Badmintonfeld
+  (Holzboden, weiße Linien, helle Wände). So erzeugt die KI für alle Übungen dieselbe Halle.
+- Prompt dazu: „… He is on a light blue exercise mat lying on a badminton court in a bright indoor sports hall:
+  light wooden hall floor with white badminton court lines, light grey walls. Keep the movement, timing, body
+  position, mat, court lines and camera exactly the same …“
+- Danach macht `tools/loopfix.py` aus jedem KI-Clip eine nahtlose Schleife: Passen Ende und Anfang zusammen,
+  wird weich überblendet; sonst läuft der Clip vor und zurück, mit den Umkehrpunkten in den Haltephasen.

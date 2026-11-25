@@ -1,0 +1,25 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#e8ebee}#v{width:960px;height:540px}</style>
+<div id=v></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="figure.js"></script><script src="figures.js"></script><script src="mannequin.js"></script>
+<script>window.pl=MannequinPlayer(document.getElementById('v'));pl.speed(0);
+(function court(){const S=pl.scene,T=THREE,col=c=>new T.Color(c);
+ pl.floor.material.color=col('#cfae84').convertSRGBToLinear(); pl.floor.geometry=new T.PlaneGeometry(4000,4000);
+ pl.mat.material.color=col('#7fa6c9').convertSRGBToLinear();
+ const add=(w,d,x,z,c,y)=>{const m=new T.Mesh(new T.PlaneGeometry(w,d),new T.MeshStandardMaterial({color:col(c).convertSRGBToLinear(),roughness:.9}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);m.receiveShadow=true;S.add(m);return m;};
+ const NX=350, BX=NX-670, FX=NX+670, Z=305;           // Netz, Grundlinien, Seitenlinien (cm)
+ add(FX-BX+120,2*Z+120,(BX+FX)/2,0,'#c39a68',-1.15);    // Spielfeld (Hallenboden Holz)
+ const L='#f4f4f2',w=4,line=(x0,z0,x1,z1)=>add(Math.max(Math.abs(x1-x0),w),Math.max(Math.abs(z1-z0),w),(x0+x1)/2,(z0+z1)/2,L,-1.1);
+ [Z,-Z,259,-259].forEach(z=>line(BX,z,FX,z));             // Seitenlinien Doppel/Einzel
+ [BX,FX,BX+76,FX-76,NX-198,NX+198].forEach(x=>line(x,-Z,x,Z)); // Grund-, hintere Aufschlag-, vordere Aufschlaglinien
+ line(BX,0,NX-198,0); line(NX+198,0,FX,0);               // Mittellinien
+ // Netz mit Pfosten
+ const post=x=>{const m=new T.Mesh(new T.CylinderGeometry(2,2,155,12),new T.MeshStandardMaterial({color:col('#2b2b2b')}));m.position.set(NX,77,x);m.castShadow=true;S.add(m);};
+ post(Z+5);post(-Z-5);
+ const net=new T.Mesh(new T.PlaneGeometry(2*Z+10,76),new T.MeshStandardMaterial({color:col('#222'),transparent:true,opacity:.45,side:T.DoubleSide}));net.rotation.y=Math.PI/2;net.position.set(NX,117,0);S.add(net);
+ const tape=new T.Mesh(new T.BoxGeometry(1,4,2*Z+10),new T.MeshStandardMaterial({color:col('#f4f4f2')}));tape.position.set(NX,154,0);S.add(tape);
+ // Hallenwände in der Ferne
+ const wall=(x,z,ry)=>{const m=new T.Mesh(new T.PlaneGeometry(4000,900),new T.MeshStandardMaterial({color:col('#eceef0'),roughness:1}));m.position.set(x,449,z);m.rotation.y=ry;S.add(m);};
+ wall(0,-1100,0);wall(0,1100,Math.PI);wall(-1400,0,Math.PI/2);wall(1900,0,-Math.PI/2);
+})();
+window.load=(k,yaw,pitch,zoom)=>{const a=Object.assign({},FIGS[k],{mark:null,trail:[],cam3d:{yaw,pitch},zoom:zoom||1.75});pl.set(a);return FIGURE_TOTAL(a);};</script>
